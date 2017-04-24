@@ -17,13 +17,14 @@ using System.Text;
 using System.Reflection;
 using System.IO;
 using EnvDTE;
+using System.Windows.Forms;
 
 namespace GoToDnSpy
 {
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class GoToDnSpy
+    internal sealed partial class GoToDnSpy
     {
         /// <summary>
         /// Command ID.
@@ -125,16 +126,16 @@ namespace GoToDnSpy
         {
             try
             {
-                var dnSpyPath = ReadDnSpyPath();
+                var dnSpyPath = ReadDnSpyPath().Trim(new []{ '\r', '\n', ' ', '\'', '\"'});
                 if(string.IsNullOrWhiteSpace(dnSpyPath))
                 {
-                    ShowMsgBox("Set dnSpy path in options first!", "Error");
+                    MessageBox.Show("Set dnSpy path in options first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 if(!File.Exists(dnSpyPath))
                 {
-                    ShowMsgBox($"File '{dnSpyPath}' not exists!", "Error");
+                    MessageBox.Show($"File '{dnSpyPath}' not exists!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -153,7 +154,7 @@ namespace GoToDnSpy
                 SymbolInfo si = semanticModel.GetSymbolInfo(st.Parent);
                 ISymbol symbol = si.Symbol ?? (si.GetType().GetProperty("CandidateSymbols").GetValue(si) as IEnumerable<ISymbol>)?.FirstOrDefault();
 
-                PreprocessSymbol(ref symbol);
+                TryPreprocessLocal(ref symbol);
 
                 INamedTypeSymbol typeSymbol = null;
                 string memberName = null;
@@ -178,17 +179,13 @@ namespace GoToDnSpy
                     return;
                 }
 
-
-
-                System.Diagnostics.Process.Start(@"Q:\coding\dnSpy\dnSpy.exe", BuildDnSpyArguments(asmPath, typeName, memberName, memberType));
+                System.Diagnostics.Process.Start(dnSpyPath, BuildDnSpyArguments(asmPath, typeName, memberName, memberType));
                
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[GoToDnSpy] Exception: {ex}");
                 _statusBar.SetText(ex.Message.ToString());
-                ShowMsgBox(ex.ToString(), "Error");
-                
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -196,7 +193,7 @@ namespace GoToDnSpy
         {
             // DTE dte = (DTE) ServiceProvider.GetService(typeof(DTE));
             // EnvDTE.Properties props = dte.get_Properties("GoTo dnSpy", "General");
-            //return props.Item("DnSpyPath")?.Value?.ToString();
+            // return props.Item("DnSpyPath")?.Value?.ToString();
             return ((SettingsDialog) _package.GetDialogPage(typeof(SettingsDialog)))?.DnSpyPath;
         }
 
@@ -223,20 +220,14 @@ namespace GoToDnSpy
             return null;
         }
 
-        #region process symbol
-        static void PreprocessSymbol(ref ISymbol symbol)
-        {
-            if (TryPreprocessLocal(ref symbol))
-                return;
-        }
-
         static bool TryPreprocessLocal(ref ISymbol symbol)
         {
-            ILocalSymbol loc = symbol as ILocalSymbol;
-            bool result = loc != null;
-            if (result)
+            if (symbol is ILocalSymbol loc)
+            {
                 symbol = loc.Type;
-            return result;
+                return true;
+            }
+            return false;
         }
 
         static bool TryHandleAsType(ISymbol symbol, out INamedTypeSymbol type)
@@ -247,52 +238,39 @@ namespace GoToDnSpy
 
         static bool TryHandleAsMember(ISymbol symbol, out INamedTypeSymbol type, out string memberName, out MemberType memberType)
         {
-            type = null;
-            memberName = null;
-            memberType = 0;
-
-            IFieldSymbol fieldSymbol = symbol as IFieldSymbol;
-            if (fieldSymbol != null)
+            if (symbol is IFieldSymbol fieldSymbol)
             {
                 type = fieldSymbol.ContainingType;
                 memberName = fieldSymbol.Name;
                 memberType = MemberType.Field;
             }
+            else if (symbol is IPropertySymbol propSymbol)
+            {
+                type = propSymbol.ContainingType;
+                memberName = propSymbol.Name;
+                memberType = MemberType.Property;
+            }
+            else if (symbol is IMethodSymbol methodSymbol)
+            {
+                type = methodSymbol.ContainingType;
+                memberName = methodSymbol.Name;
+                memberType = MemberType.Method;
+            }
+            else if (symbol is IEventSymbol eventSymbol)
+            {
+                type = eventSymbol.ContainingType;
+                memberName = eventSymbol.Name;
+                memberType = MemberType.Event;
+            }
             else
             {
-                IPropertySymbol propSymbol = symbol as IPropertySymbol;
-                if (propSymbol != null)
-                {
-                    type = propSymbol.ContainingType;
-                    memberName = propSymbol.Name;
-                    memberType = MemberType.Property;
-                }
-                else
-                {
-                    IMethodSymbol methSymbol = symbol as IMethodSymbol;
-                    if (methSymbol != null)
-                    {
-                        type = methSymbol.ContainingType;
-                        memberName = methSymbol.Name;
-                        memberType = MemberType.Method;
-                    }
-                    else
-                    {
-                        IEventSymbol eventSymbol = symbol as IEventSymbol;
-                        if (eventSymbol != null)
-                        {
-                            type = eventSymbol.ContainingType;
-                            memberName = eventSymbol.Name;
-                            memberType = MemberType.Event;
-                        }
-                    }
-                }
+                type = null;
+                memberName = null;
+                memberType = 0;
             }
+
             return type != null;
         }
-
-        enum MemberType { Field, Property, Method, Event }
-        #endregion process symbol
 
         private static string GetAssemblyDefinition(IAssemblySymbol assemblySymbol)
         {
@@ -332,17 +310,6 @@ namespace GoToDnSpy
             IVsTextView textView;
             textManager.GetActiveView(1, null, out textView);
             return _editorAdaptersFactory.GetWpfTextView(textView);
-        }
-
-        private void ShowMsgBox(string message, string title)
-        {
-            VsShellUtilities.ShowMessageBox(
-                            this.ServiceProvider,
-                            message,
-                            title,
-                            OLEMSGICON.OLEMSGICON_INFO,
-                            OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                            OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
         }
     }
 }

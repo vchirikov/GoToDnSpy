@@ -19,6 +19,7 @@ using System.IO;
 using EnvDTE;
 using System.Windows.Forms;
 
+
 namespace GoToDnSpy
 {
     /// <summary>
@@ -67,38 +68,56 @@ namespace GoToDnSpy
         private readonly IComponentModel _componentModel;
 
         /// <summary>
+        /// EnvDTE service
+        /// </summary>
+        private readonly DTE _dte;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="GoToDnSpy"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
         private GoToDnSpy(Package package)
         {
-            if (package == null)
-                throw new ArgumentNullException("package");
-
-            _package = package;
-
-            if (ServiceProvider.GetService(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
+            try
             {
-                var menuCommandID = new CommandID(CommandSet, CommandId);
-                var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
-                commandService.AddCommand(menuItem);
+                if (package == null)
+                    throw new ArgumentNullException("package");
+
+                _package = package;
+
+                if (ServiceProvider.GetService(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
+                {
+                    var menuCommandID = new CommandID(CommandSet, CommandId);
+                    var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
+                    commandService.AddCommand(menuItem);
+                }
+
+                _statusBar = (IVsStatusbar) ServiceProvider.GetService(typeof(SVsStatusbar));
+
+                if (_statusBar == null)
+                    throw new ArgumentNullException(nameof(_statusBar));
+
+                _componentModel = (IComponentModel) ServiceProvider.GetService(typeof(SComponentModel));
+
+                if (_componentModel == null)
+                    throw new ArgumentNullException(nameof(_componentModel));
+
+                _editorAdaptersFactory = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
+
+                if (_editorAdaptersFactory == null)
+                    throw new ArgumentNullException(nameof(_editorAdaptersFactory));
+
+                _dte = (DTE) ServiceProvider.GetService(typeof(DTE));
+
+                if (_dte == null)
+                    throw new ArgumentNullException(nameof(_dte));
             }
-
-            _statusBar = (IVsStatusbar) ServiceProvider.GetService(typeof(SVsStatusbar));
-
-            if (_statusBar == null)
-                throw new ArgumentNullException(nameof(_statusBar));
-
-            _componentModel = (IComponentModel) ServiceProvider.GetService(typeof(SComponentModel));
-
-            if (_componentModel == null)
-                throw new ArgumentNullException(nameof(_componentModel));
-
-            _editorAdaptersFactory = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
-
-            if (_editorAdaptersFactory == null)
-                throw new ArgumentNullException(nameof(_editorAdaptersFactory));
+            catch(Exception ex)
+            {
+                MessageBox.Show($"Some error in GoToDnSpy extensiton.\n Please take screenshot and create issue on github with this error\n{ex.ToString()}","[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
+            }
 
         }
 
@@ -126,16 +145,17 @@ namespace GoToDnSpy
         {
             try
             {
+                _statusBar.SetText("");
                 var dnSpyPath = ReadDnSpyPath()?.Trim(new []{ '\r', '\n', ' ', '\'', '\"'});
                 if(string.IsNullOrWhiteSpace(dnSpyPath))
                 {
-                    MessageBox.Show("Set dnSpy path in options first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Set dnSpy path in options first!", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 if(!File.Exists(dnSpyPath))
                 {
-                    MessageBox.Show($"File '{dnSpyPath}' not exists!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"File '{dnSpyPath}' not exists!", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -151,8 +171,16 @@ namespace GoToDnSpy
                 SyntaxNode rootSyntaxNode = document.GetSyntaxRootAsync().Result;
                 SyntaxToken st = rootSyntaxNode.FindToken(caretPosition);
                 SemanticModel semanticModel = document.GetSemanticModelAsync().Result;
-                SymbolInfo si = semanticModel.GetSymbolInfo(st.Parent);
-                ISymbol symbol = si.Symbol ?? (si.GetType().GetProperty("CandidateSymbols").GetValue(si) as IEnumerable<ISymbol>)?.FirstOrDefault();
+                ISymbol symbol = null;
+                if (st.Kind() == SyntaxKind.IdentifierToken && st.Parent.Kind() == SyntaxKind.PropertyDeclaration)
+                {
+                    symbol = semanticModel.LookupSymbols(caretPosition.Position, name: st.Text).FirstOrDefault();
+                }
+                else
+                {
+                    SymbolInfo si = semanticModel.GetSymbolInfo(st.Parent);
+                    symbol = si.Symbol ?? (si.GetType().GetProperty("CandidateSymbols").GetValue(si) as IEnumerable<ISymbol>)?.FirstOrDefault();
+                }
 
                 TryPreprocessLocal(ref symbol);
 
@@ -164,7 +192,9 @@ namespace GoToDnSpy
                 // todo: view SLaks.Ref12.Services.RoslynSymbolResolver
                 if ((symbol == null) || ((!TryHandleAsType(symbol, out typeSymbol)) && (!TryHandleAsMember(symbol, out typeSymbol, out memberName, out memberType))))
                 {
-                    _statusBar.SetText($"{st.Text} is not a valid identifier.");
+                    var msg = $"{st.Text} is not a valid identifier. token: {st.ToString()}, Kind: {st.Kind()}";
+                    _statusBar.SetText(msg);
+                    Debug.WriteLine(msg);
                     return;
                 }
 
@@ -173,9 +203,14 @@ namespace GoToDnSpy
                 string asmDef = GetAssemblyDefinition(typeSymbol.ContainingAssembly);
                 string asmPath = GetAssemblyPath(semanticModel, asmDef);
 
-                if (asmPath == null || !File.Exists(asmPath))
+                if (string.IsNullOrWhiteSpace(asmPath))
                 {
-                    _statusBar.SetText($"{typeName} is not referenced assembly type. Assembly '{asmDef}' not found;");
+                    _statusBar.SetText($"Assembly '{asmDef}' with type {typeName} not found;");
+                    return;
+                }
+                else if (!File.Exists(asmPath))
+                {
+                    MessageBox.Show($"Try build project first;\nAssembly '{asmDef}' with type {typeName} not found, path:\n{asmPath}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -185,8 +220,63 @@ namespace GoToDnSpy
             catch (Exception ex)
             {
                 _statusBar.SetText(ex.Message.ToString());
-                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Some error in GoToDnSpy extensiton.\n Please take screenshot and create issue on github with this error\n{ex.ToString()}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private string GetCurrentFileOutputAssembly()
+        {
+            var project = _dte.ActiveDocument?.ProjectItem?.ContainingProject;
+
+            // if it's fake project, this object doesn't have ConfigurationManager, we try find another object
+            if (project != null && (
+                        string.CompareOrdinal(project.UniqueName, EnvDTE.Constants.vsMiscFilesProjectUniqueName)     == 0
+                     || string.CompareOrdinal(project.UniqueName, EnvDTE.Constants.vsSolutionItemsProjectUniqueName) == 0
+                ))
+            {
+
+                project = _dte.Solution.FindProjectItem(_dte.ActiveDocument.FullName)?.ContainingProject;
+            }
+
+            if (project == null)
+                return null;
+
+            return GetTargetOutputPath(project);
+        }
+
+        private string GetTargetOutputPath(EnvDTE.Project project)
+        {
+            var configManager = project.ConfigurationManager;
+
+            string outputPath = (configManager != null) ? 
+                                    configManager.ActiveConfiguration?.Properties.FindByNameOrDefault<string>("OutputPath")?.Trim() : 
+                                    project.Properties.FindByNameOrDefault<string>("OutputPath")?.Trim();
+
+            if (string.IsNullOrWhiteSpace(outputPath))
+            {
+                _statusBar.SetText($"Can't find output path of project {project.Name}!");
+                return null;
+            }
+
+            string directory = null;
+            string outputFilename = project.FileName;
+            if(string.IsNullOrWhiteSpace(outputFilename))
+            {
+                outputFilename = project.FullName;
+            }
+            
+            // check outputPath type (shares and C:\ is absolute path and we can just return)
+            if ((outputPath.StartsWith("\\\\", StringComparison.Ordinal))
+                || (outputPath.Length >= 2 && outputPath[1] == Path.VolumeSeparatorChar))
+            {
+                directory = outputPath;
+            }
+            else
+            {
+                directory = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(outputFilename), outputPath));
+            }
+
+            return Path.Combine(directory, project.Properties.FindByNameOrDefault<string>("OutputFileName")?.Trim() ?? Path.ChangeExtension(outputFilename, ".dll"));
         }
 
         string ReadDnSpyPath()
@@ -203,20 +293,32 @@ namespace GoToDnSpy
         }
 
 
-        static string GetAssemblyPath(SemanticModel semanticModel, string assemblyDef)
+        string GetAssemblyPath(SemanticModel semanticModel, string assemblyDef)
         {
             IEnumerator<AssemblyIdentity> refAsmNames = semanticModel.Compilation.ReferencedAssemblyNames.GetEnumerator();
             IEnumerator<MetadataReference> refs = semanticModel.Compilation.References.GetEnumerator();
-
+            
+            // try find in referenced assemblies first
             while (refAsmNames.MoveNext())
             {
                 refs.MoveNext();
                 if (refAsmNames.Current.ToString() == assemblyDef)
                     return refs.Current.Display;
             }
+            // we in same assembly that symbol, try find output path
+            if (semanticModel.Compilation.Assembly.Identity.ToString() == assemblyDef)
+            {
+                var outputPath = GetCurrentFileOutputAssembly();
+
+                if(!string.IsNullOrWhiteSpace(outputPath))
+                    return outputPath;
+            }
+
             return null;
         }
-
+        /// <summary>
+        /// Find type of local symbol
+        /// </summary>
         static bool TryPreprocessLocal(ref ISymbol symbol)
         {
             if (symbol is ILocalSymbol loc)

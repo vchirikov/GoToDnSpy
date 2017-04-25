@@ -5,7 +5,7 @@
         Field,
         Property,
         Method,
-        Event
+        Event,
     }
     
 }

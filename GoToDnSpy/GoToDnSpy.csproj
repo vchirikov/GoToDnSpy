@@ -58,6 +58,7 @@
     <CopyVsixExtensionLocation>..\Build</CopyVsixExtensionLocation>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="EnvDteExtensions.cs" />
     <Compile Include="GoToDnSpy.cs" />
     <Compile Include="GoToDnSpyPackage.cs" />
     <Compile Include="MemberType.cs" />

@@ -44,6 +44,7 @@ You can add and use shortcut for fast run command
         (less "is not a valid identifier" errors)
     + Added support for solution projects output, now we can easy see CIL of compiled project! 
         (must build project first)
+    * Fix support EnvDTE fake project "Miscellaneous Files"
 - 1.0.1
     * Fix error if empty dnSpy path
 - 1.0

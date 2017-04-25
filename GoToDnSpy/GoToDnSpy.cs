@@ -126,7 +126,7 @@ namespace GoToDnSpy
         {
             try
             {
-                var dnSpyPath = ReadDnSpyPath().Trim(new []{ '\r', '\n', ' ', '\'', '\"'});
+                var dnSpyPath = ReadDnSpyPath()?.Trim(new []{ '\r', '\n', ' ', '\'', '\"'});
                 if(string.IsNullOrWhiteSpace(dnSpyPath))
                 {
                     MessageBox.Show("Set dnSpy path in options first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -191,9 +191,6 @@ namespace GoToDnSpy
 
         string ReadDnSpyPath()
         {
-            // DTE dte = (DTE) ServiceProvider.GetService(typeof(DTE));
-            // EnvDTE.Properties props = dte.get_Properties("GoTo dnSpy", "General");
-            // return props.Item("DnSpyPath")?.Value?.ToString();
             return ((SettingsDialog) _package.GetDialogPage(typeof(SettingsDialog)))?.DnSpyPath;
         }
 

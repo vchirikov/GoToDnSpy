@@ -8,6 +8,10 @@ buy and install it only for this command. So I created this plugin for quick acc
 [dnSpy](https://github.com/0xd4d/dnSpy/) is the best tool for .net reseacher.   
 You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnspy/branch/master/artifacts) from CI.
 
+## Installing
+
+Plugin can be found in [new Visual Studio marketplace](https://marketplace.visualstudio.com/vsgallery/02d8452f-a0ec-4cbc-adc7-d050c0f43d54).  
+[Old Visual Studio gallery link](https://visualstudiogallery.msdn.microsoft.com/02d8452f-a0ec-4cbc-adc7-d050c0f43d54?redir=0)
 
 ## Preview
 
@@ -32,4 +36,3 @@ GoToDnSpy command can be found in Visual Studio tools menu
 You can add and use shortcut for fast run command 
 
 ![Shortcut example](images/shortcut.png)
-

@@ -172,7 +172,27 @@ namespace GoToDnSpy
                 SyntaxToken st = rootSyntaxNode.FindToken(caretPosition);
                 SemanticModel semanticModel = document.GetSemanticModelAsync().Result;
                 ISymbol symbol = null;
-                if (st.Kind() == SyntaxKind.IdentifierToken && st.Parent.Kind() == SyntaxKind.PropertyDeclaration)
+                var parentKind = st.Parent.Kind();
+                if (st.Kind() == SyntaxKind.IdentifierToken && (
+                       parentKind == SyntaxKind.PropertyDeclaration 
+                    || parentKind == SyntaxKind.FieldDeclaration 
+                    || parentKind == SyntaxKind.MethodDeclaration 
+                    || parentKind == SyntaxKind.NamespaceDeclaration
+                    || parentKind == SyntaxKind.DestructorDeclaration
+                    || parentKind == SyntaxKind.ConstructorDeclaration
+                    || parentKind == SyntaxKind.OperatorDeclaration
+                    || parentKind == SyntaxKind.ConversionOperatorDeclaration
+                    || parentKind == SyntaxKind.EnumDeclaration
+                    || parentKind == SyntaxKind.EnumMemberDeclaration
+                    || parentKind == SyntaxKind.ClassDeclaration
+                    || parentKind == SyntaxKind.EventDeclaration
+                    || parentKind == SyntaxKind.EventFieldDeclaration
+                    || parentKind == SyntaxKind.InterfaceDeclaration
+                    || parentKind == SyntaxKind.StructDeclaration
+                    || parentKind == SyntaxKind.DelegateDeclaration
+                    || parentKind == SyntaxKind.IndexerDeclaration
+                    || parentKind == SyntaxKind.VariableDeclarator
+                    ))
                 {
                     symbol = semanticModel.LookupSymbols(caretPosition.Position, name: st.Text).FirstOrDefault();
                 }
@@ -303,7 +323,24 @@ namespace GoToDnSpy
             {
                 refs.MoveNext();
                 if (refAsmNames.Current.ToString() == assemblyDef)
-                    return refs.Current.Display;
+                {
+                    var displayName = refs.Current.Display;
+                    EnvDTE.Project project = null;
+                    // try found project
+                    foreach (EnvDTE.Project proj in _dte.Solution.Projects)
+                    {
+                        if (string.Equals(proj.Name, displayName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            project = proj;
+                            break;
+                        }
+                    }
+                    // not found, reference is a path
+                    if(project == null)
+                        return displayName;
+                    // project reference
+                    return GetTargetOutputPath(project) ?? displayName;
+                }
             }
             // we in same assembly that symbol, try find output path
             if (semanticModel.Compilation.Assembly.Identity.ToString() == assemblyDef)

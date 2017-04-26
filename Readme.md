@@ -37,8 +37,18 @@ You can add and use shortcut for fast run command
 
 ![Shortcut example](images/shortcut.png)
 
+
+## ISSUES
+
+"is not a valid identifier" errors means that for now plugin can't parse syntax tree under caret, please create issue on github with sample of code, it's help improve extension.
+
 ## Release notes
 
+- 1.0.3
+    + Added navigate support for Roslyn many others `*DeclarationSyntax`  
+        (less "is not a valid identifier" errors)
+    + Add support for referenced project output (i.e. your referenced class library project)
+      (no more 'not found' errors on this type of reference)
 - 1.0.2
     + Added navigate support for Roslyn `PropertyDeclarationSyntax`  
         (less "is not a valid identifier" errors)

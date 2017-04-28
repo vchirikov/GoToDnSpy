@@ -10,8 +10,9 @@ You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnsp
 
 ## Installing
 
-Plugin can be found in [new Visual Studio marketplace](https://marketplace.visualstudio.com/vsgallery/02d8452f-a0ec-4cbc-adc7-d050c0f43d54).  
-[Old Visual Studio gallery link](https://visualstudiogallery.msdn.microsoft.com/02d8452f-a0ec-4cbc-adc7-d050c0f43d54?redir=0)
+Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstudio.com/vsgallery/02d8452f-a0ec-4cbc-adc7-d050c0f43d54).  
+
+**Please send positive feedback if you liked the extension :)**
 
 ## Preview
 
@@ -44,6 +45,8 @@ You can add and use shortcut for fast run command
 
 ## Release notes
 
+- 1.0.4
+    + Added .Net Core projects support
 - 1.0.3
     + Added navigate support for Roslyn many others `*DeclarationSyntax`  
         (less "is not a valid identifier" errors)

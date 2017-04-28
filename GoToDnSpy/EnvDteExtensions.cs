@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EnvDTE;
+using Microsoft.VisualStudio.ProjectSystem.Properties;
+
 namespace GoToDnSpy
 {
 
@@ -72,6 +74,37 @@ namespace GoToDnSpy
             return null;
         }
 
+        /// <summary>
+        /// Workaround from https://github.com/dotnet/project-system/issues/669
+        /// </summary>
+        private static string GetProjectPropertyNetCoreWorkaround(this Project project, string name)
+        {
+            var context = (IVsBrowseObjectContext) project;
+            var unconfiguredProject = context.UnconfiguredProject;
+            var configuredProject = unconfiguredProject.GetSuggestedConfiguredProjectAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            var properties = configuredProject.Services.ProjectPropertiesProvider.GetCommonProperties();
+            return properties.GetEvaluatedPropertyValueAsync(name).ConfigureAwait(false).GetAwaiter().GetResult(); ;
+        }
 
+        /// <summary>
+        /// Return value of project property or null
+        /// </summary>
+        /// <param name="project">EnvDTE proj</param>
+        /// <param name="name">The property name.</param>
+        /// <returns>string or null</returns>
+        public static string GetPropertyOrDefault(this Project project, string name)
+        {
+            return (project.Properties.FindByNameOrDefault<string>(name) ?? project.GetProjectPropertyNetCoreWorkaround(name))?.Trim();
+        }
+
+        /// <summary>
+        /// Gets the output filename.
+        /// </summary>
+        /// <param name="project">The project.</param>
+        /// <returns>output filepath</returns>
+        public static string GetOutputFilename(this Project project)
+        {
+            return (project.Properties.FindByNameOrDefault<string>("OutputFileName") ?? project.GetProjectPropertyNetCoreWorkaround("TargetFileName"))?.Trim();
+        }
     }
 }

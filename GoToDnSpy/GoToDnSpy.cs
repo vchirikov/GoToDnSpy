@@ -18,7 +18,8 @@ using System.Reflection;
 using System.IO;
 using EnvDTE;
 using System.Windows.Forms;
-
+using Microsoft.Build.Evaluation;
+using Microsoft.VisualStudio.ProjectSystem.Properties;
 
 namespace GoToDnSpy
 {
@@ -132,6 +133,21 @@ namespace GoToDnSpy
         public static void Initialize(Package package)
         {
             Instance = new GoToDnSpy(package);
+        }
+
+        public static void Output(string msg)
+        {
+            // Get the output window
+            var outputWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+
+            // Ensure that the desired pane is visible
+            var paneGuid = Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
+            IVsOutputWindowPane pane;
+            outputWindow.CreatePane(paneGuid, "General", 1, 0);
+            outputWindow.GetPane(paneGuid, out pane);
+
+            // Output the message
+            pane.OutputString(msg);
         }
 
         /// <summary>
@@ -270,7 +286,7 @@ namespace GoToDnSpy
 
             string outputPath = (configManager != null) ? 
                                     configManager.ActiveConfiguration?.Properties.FindByNameOrDefault<string>("OutputPath")?.Trim() : 
-                                    project.Properties.FindByNameOrDefault<string>("OutputPath")?.Trim();
+                                    project.GetPropertyOrDefault("OutputPath")?.Trim();
 
             if (string.IsNullOrWhiteSpace(outputPath))
             {
@@ -296,7 +312,7 @@ namespace GoToDnSpy
                 directory = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(outputFilename), outputPath));
             }
 
-            return Path.Combine(directory, project.Properties.FindByNameOrDefault<string>("OutputFileName")?.Trim() ?? Path.ChangeExtension(outputFilename, ".dll"));
+            return Path.Combine(directory, project.GetOutputFilename() ?? Path.ChangeExtension(outputFilename, ".dll"));
         }
 
         string ReadDnSpyPath()

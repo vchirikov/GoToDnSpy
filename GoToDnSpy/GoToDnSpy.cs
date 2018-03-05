@@ -353,7 +353,7 @@ namespace GoToDnSpy
                     }
                     // not found, reference is a path
                     if(project == null)
-                        return displayName;
+                        return CorrectReferenceAssemblyPath(displayName, assemblyDef);
                     // project reference
                     return GetTargetOutputPath(project) ?? displayName;
                 }
@@ -462,6 +462,25 @@ namespace GoToDnSpy
             IVsTextView textView;
             textManager.GetActiveView(1, null, out textView);
             return _editorAdaptersFactory.GetWpfTextView(textView);
+        }
+
+        private static string CorrectReferenceAssemblyPath(string path, string assemblyDef)
+        {
+            var assemblyName = new AssemblyName(assemblyDef);
+            if (GACHelper.IsReferenceAssembly(path)) 
+            {
+                // Assemblies in "C:\Program Files\Reference Assemblies\" doesn't have implementation.
+                // Try to get the assembly from GAC
+                // See https://github.com/verysimplenick/GoToDnSpy/issues/2
+                var name_path = GACHelper.FindAssemblyInGAC(assemblyName);
+
+                if (name_path != null) 
+                {
+                    return name_path.Item2;
+                }
+            }
+
+            return path;
         }
     }
 }

@@ -2,15 +2,16 @@
 
 ## Introduction
 
-Sometimes I need something command like Resharper has "Navigate To Decompiled Sources", but I don't want
-buy and install it only for this command. So I created this plugin for quick access to dnSpy.
+Sometimes I need something command like Resharper has "Navigate To Decompiled Sources", but I don't want to buy and install it only for this command. So I created this plugin for quick access to dnSpy.
+BTW, for now, VS 2017.6 Preview can do it with ILSpy.
 
-[dnSpy](https://github.com/0xd4d/dnSpy/) is the best tool for .net reseacher.   
+
+[dnSpy](https://github.com/0xd4d/dnSpy/) is the best tool for .net reseacher.
 You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnspy/branch/master/artifacts) from CI.
 
 ## Installing
 
-Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstudio.com/vsgallery/02d8452f-a0ec-4cbc-adc7-d050c0f43d54).  
+Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstudio.com/vsgallery/02d8452f-a0ec-4cbc-adc7-d050c0f43d54).
 
 **Please send positive feedback if you liked the extension :)**
 
@@ -21,7 +22,7 @@ Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstu
 
 ## Options
 
-For work plugin need put path to installed dnSpy in options page.  
+For work plugin need put path to installed dnSpy in options page.
 You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnspy/branch/master/artifacts) from CI.
 
 ![Options GoToDnSpy](images/options.png)
@@ -34,7 +35,7 @@ GoToDnSpy command can be found in Visual Studio tools menu
 
 ![Tools menu with GoTo dnSpy](images/tools_menu.png)
 
-You can add and use shortcut for fast run command 
+You can add and use shortcut for fast run command
 
 ![Shortcut example](images/shortcut.png)
 
@@ -45,20 +46,24 @@ You can add and use shortcut for fast run command
 
 ## Release notes
 
+- 1.0.6
+    + Added support for net framework referenced assemblies. [issue](https://github.com/verysimplenick/GoToDnSpy/issues/2)
+- 1.0.5
+    + Some changes
 - 1.0.4
     + Added .Net Core projects support
 - 1.0.3
-    + Added navigate support for Roslyn many others `*DeclarationSyntax`  
+    + Added navigate support for Roslyn many others `*DeclarationSyntax`
         (less "is not a valid identifier" errors)
-    + Add support for referenced project output (i.e. your referenced class library project)
+    + Added support for referenced project output (i.e. your referenced class library project)
       (no more 'not found' errors on this type of reference)
 - 1.0.2
-    + Added navigate support for Roslyn `PropertyDeclarationSyntax`  
+    + Added navigate support for Roslyn `PropertyDeclarationSyntax`
         (less "is not a valid identifier" errors)
-    + Added support for solution projects output, now we can easy see CIL of compiled project! 
+    + Added support for solution projects output, now we can easy see CIL of compiled project!
         (must build project first)
-    * Fix support EnvDTE fake project "Miscellaneous Files"
+    * Fixed support EnvDTE fake project "Miscellaneous Files"
 - 1.0.1
-    * Fix error if empty dnSpy path
+    * Fixed error if empty dnSpy path
 - 1.0
     + First public release

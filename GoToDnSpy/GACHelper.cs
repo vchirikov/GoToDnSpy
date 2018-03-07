@@ -1,106 +1,90 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace GoToDnSpy 
+namespace GoToDnSpy
 {
-    static class GACHelper 
+    internal static class GacHelper
     {
-        #region EnumerateGACAssemblies1_2
 
-        private static string[] GACFolders1_2 = new string[] 
-        {
-            "GAC", "GAC_32", "GAC_64", "GAC_MSIL"
-        };
+        private readonly static string _referenceAssemblyPath_x64;
+        private readonly static string _referenceAssemblyPath_x86;
+        private readonly static string _systemrootPath;
+        private readonly static string[] _gacFolders;
+        private readonly static Lazy<List<(AssemblyName AssemblyName, string Filepath)>> _gacNetframework2;
+        private readonly static Lazy<List<(AssemblyName AssemblyName, string Filepath)>> _gacNetframework4;
 
-        public static IEnumerable<Tuple<AssemblyName, String>> EnumerateGACAssemblies1_2()
+
+        static GacHelper()
         {
-            foreach (var gacFolder in GACFolders1_2) 
+            _gacFolders = new string[] { "GAC", "GAC_32", "GAC_64", "GAC_MSIL" };
+            _systemrootPath = Environment.GetEnvironmentVariable("systemroot") ?? throw new GoToDnSpyException($"Enviroment variable 'systemroot' doesn't exists!");
+            _referenceAssemblyPath_x64 = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles")      ?? @"c:\Program Files\",      "Reference Assemblies");
+            _referenceAssemblyPath_x86 = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)") ?? @"c:\Program Files (x86)\","Reference Assemblies");
+
+            _gacNetframework2 = new Lazy<List<(AssemblyName AssemblyName, string Filepath)>>(() => ReadGacAssemblyNames(Path.Combine(_systemrootPath, "assembly")));
+            _gacNetframework4 = new Lazy<List<(AssemblyName AssemblyName, string Filepath)>>(() => ReadGacAssemblyNames(Path.Combine(_systemrootPath, "Microsoft.NET", "assembly")));
+        }
+
+
+        private static List<(AssemblyName AssemblyName, string Filepath)> ReadGacAssemblyNames(string gacRoot)
+        {
+            var result = new List<(AssemblyName AssemblyName, string Filepath)>();
+            foreach (var gacFolder in _gacFolders)
             {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("systemroot"), "assembly", gacFolder);
-                if (Directory.Exists(path)) 
+                var path = Path.Combine(gacRoot, gacFolder);
+                if (!Directory.Exists(path))
+                    continue;
+
+                foreach (var assemblyFile in Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories))
                 {
-                    foreach (var item in EnumerateAssembliesFromFolderRecursive(path)) 
+                    AssemblyName assemblyName = null;
+                    try
                     {
-                        yield return item;
+                        assemblyName = AssemblyName.GetAssemblyName(assemblyFile);
                     }
-                }
-            }
-        }
-
-        #endregion
-
-        #region EnumerateGACAssemblies4
-
-        private static string[] GACFolders4 = new string[]
-        {
-            "GAC_32", "GAC_64", "GAC_MSIL"
-        };
-
-        public static IEnumerable<Tuple<AssemblyName, String>> EnumerateGACAssemblies4() {
-            foreach (var gacFolder in GACFolders4) 
-            {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("systemroot"), "Microsoft.NET", "assembly", gacFolder);
-                if (Directory.Exists(path)) 
-                {
-                    foreach (var item in EnumerateAssembliesFromFolderRecursive(path)) 
+                    catch (Exception)
                     {
-                        yield return item;
                     }
+
+                    if (assemblyName == null)
+                        continue;
+                    result.Add((assemblyName, assemblyFile));
                 }
             }
+            return result;
         }
 
-        private static IEnumerable<Tuple<AssemblyName, String>> EnumerateAssembliesFromFolderRecursive(string path) {
-            foreach (string assemblyFile in Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories)) 
-            {
-                AssemblyName assemblyName = null;
-                try 
-                {
-                    assemblyName = AssemblyName.GetAssemblyName(assemblyFile);
-                }
-                catch (Exception) {
-                }
-
-                if (assemblyName != null) 
-                {
-                    yield return Tuple.Create(assemblyName, assemblyFile);
-                }
-            }
-        }
-
-        #endregion
-
-        #region FindAssemblyInGac
-
-        public static Tuple<AssemblyName, string> FindAssemblyInGAC(AssemblyName assemblyName, int? clrVersion = null) 
+        /// <summary>
+        /// Search assemblyName in GAC folders.
+        /// First search in net framework 4, when search in gac net framework 2
+        /// </summary>
+        /// <param name="assemblyName">Assembly name for search</param>
+        /// <returns>path to assembly or <c>null</c></returns>
+        public static string FindAssemblyInGac(AssemblyName assemblyName)
         {
-            if (clrVersion == null) 
+            // avoid linq alloccations
+            foreach (var tuple in _gacNetframework4.Value)
             {
-                return 
-                    FindAssemblyInGAC(assemblyName, 4) ??
-                    FindAssemblyInGAC(assemblyName, 2);
+                if (string.Equals(tuple.AssemblyName.FullName, assemblyName.FullName, StringComparison.OrdinalIgnoreCase))
+                    return tuple.Filepath;
             }
-
-            if (clrVersion < 4) 
+            foreach (var tuple in _gacNetframework2.Value)
             {
-                return EnumerateGACAssemblies1_2().FirstOrDefault(x => x.Item1.FullName == assemblyName.FullName);
+                if (string.Equals(tuple.AssemblyName.FullName, assemblyName.FullName, StringComparison.OrdinalIgnoreCase))
+                    return tuple.Filepath;
             }
-            else 
-            {
-                return EnumerateGACAssemblies4().FirstOrDefault(x => x.Item1.FullName == assemblyName.FullName);
-            }
+            return null;
         }
 
-        #endregion
+        /// <summary>
+        /// Check that path in program files
+        /// </summary>
+        /// <param name="path">check path</param>
+        /// <returns>true if in program files</returns>
+        public static bool IsReferenceAssembly(string path) => path.StartsWith(_referenceAssemblyPath_x64, StringComparison.OrdinalIgnoreCase) || path.StartsWith(_referenceAssemblyPath_x86, StringComparison.OrdinalIgnoreCase);
 
-
-        private static Lazy<string> ReferenceAssemblyPath64 = new Lazy<string>(() => Environment.GetEnvironmentVariable("ProgramFiles"));
-        private static Lazy<string> ReferenceAssemblyPath32 = new Lazy<string>(() => Environment.GetEnvironmentVariable("ProgramFiles(x86)"));
-        public static bool IsReferenceAssembly(string path) {
-           return path.StartsWith(ReferenceAssemblyPath64.Value) || path.StartsWith(ReferenceAssemblyPath32.Value);
-        }
     }
 }

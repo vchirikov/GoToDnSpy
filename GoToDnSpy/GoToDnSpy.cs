@@ -42,7 +42,7 @@ namespace GoToDnSpy
         /// VS Package that provides this command, not null.
         /// </summary>
         private readonly Package _package;
-        
+
         /// <summary>
         /// The status bar
         /// </summary>
@@ -94,12 +94,12 @@ namespace GoToDnSpy
                     commandService.AddCommand(menuItem);
                 }
 
-                _statusBar = (IVsStatusbar) ServiceProvider.GetService(typeof(SVsStatusbar));
+                _statusBar = (IVsStatusbar)ServiceProvider.GetService(typeof(SVsStatusbar));
 
                 if (_statusBar == null)
                     throw new ArgumentNullException(nameof(_statusBar));
 
-                _componentModel = (IComponentModel) ServiceProvider.GetService(typeof(SComponentModel));
+                _componentModel = (IComponentModel)ServiceProvider.GetService(typeof(SComponentModel));
 
                 if (_componentModel == null)
                     throw new ArgumentNullException(nameof(_componentModel));
@@ -109,14 +109,14 @@ namespace GoToDnSpy
                 if (_editorAdaptersFactory == null)
                     throw new ArgumentNullException(nameof(_editorAdaptersFactory));
 
-                _dte = (DTE) ServiceProvider.GetService(typeof(DTE));
+                _dte = (DTE)ServiceProvider.GetService(typeof(DTE));
 
                 if (_dte == null)
                     throw new ArgumentNullException(nameof(_dte));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                MessageBox.Show($"Some error in GoToDnSpy extensiton.\n Please take screenshot and create issue on github with this error\n{ex.ToString()}","[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Some error in GoToDnSpy extensiton.\n Please take screenshot and create issue on github with this error\n{ex.ToString()}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 throw;
             }
 
@@ -163,13 +163,13 @@ namespace GoToDnSpy
             {
                 _statusBar.SetText("");
                 var dnSpyPath = ReadDnSpyPath()?.Trim(new []{ '\r', '\n', ' ', '\'', '\"'});
-                if(string.IsNullOrWhiteSpace(dnSpyPath))
+                if (string.IsNullOrWhiteSpace(dnSpyPath))
                 {
                     MessageBox.Show("Set dnSpy path in options first!", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                if(!File.Exists(dnSpyPath))
+                if (!File.Exists(dnSpyPath))
                 {
                     MessageBox.Show($"File '{dnSpyPath}' not exists!", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
@@ -190,9 +190,9 @@ namespace GoToDnSpy
                 ISymbol symbol = null;
                 var parentKind = st.Parent.Kind();
                 if (st.Kind() == SyntaxKind.IdentifierToken && (
-                       parentKind == SyntaxKind.PropertyDeclaration 
-                    || parentKind == SyntaxKind.FieldDeclaration 
-                    || parentKind == SyntaxKind.MethodDeclaration 
+                       parentKind == SyntaxKind.PropertyDeclaration
+                    || parentKind == SyntaxKind.FieldDeclaration
+                    || parentKind == SyntaxKind.MethodDeclaration
                     || parentKind == SyntaxKind.NamespaceDeclaration
                     || parentKind == SyntaxKind.DestructorDeclaration
                     || parentKind == SyntaxKind.ConstructorDeclaration
@@ -251,7 +251,7 @@ namespace GoToDnSpy
                 }
 
                 System.Diagnostics.Process.Start(dnSpyPath, BuildDnSpyArguments(asmPath, typeName, memberName, memberType));
-               
+
             }
             catch (Exception ex)
             {
@@ -284,8 +284,8 @@ namespace GoToDnSpy
         {
             var configManager = project.ConfigurationManager;
 
-            string outputPath = (configManager != null) ? 
-                                    configManager.ActiveConfiguration?.Properties.FindByNameOrDefault<string>("OutputPath")?.Trim() : 
+            string outputPath = (configManager != null) ?
+                                    configManager.ActiveConfiguration?.Properties.FindByNameOrDefault<string>("OutputPath")?.Trim() :
                                     project.GetPropertyOrDefault("OutputPath")?.Trim();
 
             if (string.IsNullOrWhiteSpace(outputPath))
@@ -296,11 +296,11 @@ namespace GoToDnSpy
 
             string directory = null;
             string outputFilename = project.FileName;
-            if(string.IsNullOrWhiteSpace(outputFilename))
+            if (string.IsNullOrWhiteSpace(outputFilename))
             {
                 outputFilename = project.FullName;
             }
-            
+
             // check outputPath type (shares and C:\ is absolute path and we can just return)
             if ((outputPath.StartsWith("\\\\", StringComparison.Ordinal))
                 || (outputPath.Length >= 2 && outputPath[1] == Path.VolumeSeparatorChar))
@@ -317,7 +317,7 @@ namespace GoToDnSpy
 
         string ReadDnSpyPath()
         {
-            return ((SettingsDialog) _package.GetDialogPage(typeof(SettingsDialog)))?.DnSpyPath;
+            return ((SettingsDialog)_package.GetDialogPage(typeof(SettingsDialog)))?.DnSpyPath;
         }
 
         static string BuildDnSpyArguments(string asmPath, string typeName, string memberName, MemberType memberType)
@@ -333,37 +333,39 @@ namespace GoToDnSpy
         {
             IEnumerator<AssemblyIdentity> refAsmNames = semanticModel.Compilation.ReferencedAssemblyNames.GetEnumerator();
             IEnumerator<MetadataReference> refs = semanticModel.Compilation.References.GetEnumerator();
-            
+
             // try find in referenced assemblies first
             while (refAsmNames.MoveNext())
             {
                 refs.MoveNext();
-                if (refAsmNames.Current.ToString() == assemblyDef)
+                if (!string.Equals(refAsmNames.Current.ToString(), assemblyDef, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var displayName = refs.Current.Display;
+                EnvDTE.Project project = null;
+
+                // try found project
+                foreach (EnvDTE.Project proj in _dte.Solution.Projects)
                 {
-                    var displayName = refs.Current.Display;
-                    EnvDTE.Project project = null;
-                    // try found project
-                    foreach (EnvDTE.Project proj in _dte.Solution.Projects)
-                    {
-                        if (string.Equals(proj.Name, displayName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            project = proj;
-                            break;
-                        }
-                    }
-                    // not found, reference is a path
-                    if(project == null)
-                        return displayName;
-                    // project reference
-                    return GetTargetOutputPath(project) ?? displayName;
+                    if (!string.Equals(proj.Name, displayName, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    project = proj;
+                    break;
                 }
+                // not found, reference is a path
+                if (project == null)
+                    return TryCorrectReferenceAssemblyPath(displayName, assemblyDef);
+
+                // project reference
+                return GetTargetOutputPath(project) ?? displayName;
             }
+
             // we in same assembly that symbol, try find output path
             if (semanticModel.Compilation.Assembly.Identity.ToString() == assemblyDef)
             {
                 var outputPath = GetCurrentFileOutputAssembly();
 
-                if(!string.IsNullOrWhiteSpace(outputPath))
+                if (!string.IsNullOrWhiteSpace(outputPath))
                     return outputPath;
             }
 
@@ -462,6 +464,22 @@ namespace GoToDnSpy
             IVsTextView textView;
             textManager.GetActiveView(1, null, out textView);
             return _editorAdaptersFactory.GetWpfTextView(textView);
+        }
+
+        /// <summary>
+        /// Assemblies in "C:\Program Files\Reference Assemblies\" doesn't have implementation.
+        /// Try to get the assembly from GAC
+        /// See https://github.com/verysimplenick/GoToDnSpy/issues/2
+        /// </summary>
+        private static string TryCorrectReferenceAssemblyPath(string path, string assemblyDef)
+        {
+            if (!GacHelper.IsReferenceAssembly(path))
+                return path;
+
+            var assemblyName = new AssemblyName(assemblyDef);
+            var filepath     = GacHelper.FindAssemblyInGac(assemblyName);
+
+            return filepath ?? path;
         }
     }
 }

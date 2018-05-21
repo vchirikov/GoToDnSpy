@@ -187,32 +187,8 @@ namespace GoToDnSpy
                 SyntaxNode rootSyntaxNode = document.GetSyntaxRootAsync().Result;
                 SyntaxToken st = rootSyntaxNode.FindToken(caretPosition);
                 SemanticModel semanticModel = document.GetSemanticModelAsync().Result;
-                ISymbol symbol = null;
-                var parentKind = st.Parent.Kind();
-                if (st.Kind() == SyntaxKind.IdentifierToken && (
-                       parentKind == SyntaxKind.PropertyDeclaration
-                    || parentKind == SyntaxKind.FieldDeclaration
-                    || parentKind == SyntaxKind.MethodDeclaration
-                    || parentKind == SyntaxKind.NamespaceDeclaration
-                    || parentKind == SyntaxKind.DestructorDeclaration
-                    || parentKind == SyntaxKind.ConstructorDeclaration
-                    || parentKind == SyntaxKind.OperatorDeclaration
-                    || parentKind == SyntaxKind.ConversionOperatorDeclaration
-                    || parentKind == SyntaxKind.EnumDeclaration
-                    || parentKind == SyntaxKind.EnumMemberDeclaration
-                    || parentKind == SyntaxKind.ClassDeclaration
-                    || parentKind == SyntaxKind.EventDeclaration
-                    || parentKind == SyntaxKind.EventFieldDeclaration
-                    || parentKind == SyntaxKind.InterfaceDeclaration
-                    || parentKind == SyntaxKind.StructDeclaration
-                    || parentKind == SyntaxKind.DelegateDeclaration
-                    || parentKind == SyntaxKind.IndexerDeclaration
-                    || parentKind == SyntaxKind.VariableDeclarator
-                    ))
-                {
-                    symbol = semanticModel.LookupSymbols(caretPosition.Position, name: st.Text).FirstOrDefault();
-                }
-                else
+                ISymbol symbol = semanticModel.LookupSymbols(caretPosition.Position, name: st.Text).FirstOrDefault();
+                if(symbol == null)
                 {
                     SymbolInfo si = semanticModel.GetSymbolInfo(st.Parent);
                     symbol = si.Symbol ?? (si.GetType().GetProperty("CandidateSymbols").GetValue(si) as IEnumerable<ISymbol>)?.FirstOrDefault();

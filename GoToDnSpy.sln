@@ -3,10 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoToDnSpy", "GoToDnSpy\GoToDnSpy.csproj", "{EBF7F9EF-6EE3-4612-88CB-3EAD17DF0EF0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoToDnSpy", "src\GoToDnSpy\GoToDnSpy.csproj", "{EBF7F9EF-6EE3-4612-88CB-3EAD17DF0EF0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DFC8C3DA-F2B1-43D2-B6FF-F049FF6E8A9C}"
 	ProjectSection(SolutionItems) = preProject
+		package.json = package.json
 		Readme.md = Readme.md
 	EndProjectSection
 EndProject

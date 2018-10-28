@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 namespace GoToDnSpy
 {
-    [Guid(GoToDnSpyPackage.PackageGuidString)]
+    [Guid(PackageGuids.guidGoToDnSpyPackageString)]
     public class SettingsDialog : DialogPage
     {
         [Category("GoTo dnSpy")]

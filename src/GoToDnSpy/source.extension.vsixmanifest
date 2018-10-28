@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+    <Metadata>
+        <Identity Id="GoToDnSpy" Version="1.0.7" Language="en-US" Publisher="Vladimir Chirikov" />
+        <DisplayName>GoToDnSpy</DisplayName>
+        <Description xml:space="preserve">Open dnSpy and select method or type under caret.</Description>
+        <MoreInfo>https://github.com/vchirikov/GoToDnSpy</MoreInfo>
+        <License>LICENSE</License>
+        <GettingStartedGuide>Readme.md</GettingStartedGuide>
+        <ReleaseNotes>CHANGELOG.md</ReleaseNotes>
+        <Icon>icon.ico</Icon>
+        <PreviewImage>preview.png</PreviewImage>
+        <Tags>GoToDnSpy, GoTo, Disasm, ILSpy, ILDisasm, Disassemble, CIL, IL, MSIL, dnSpy, de4dot, dnlib, decompile, Emit</Tags>
+    </Metadata>
+    <Installation>
+        <InstallationTarget Version="[15.0,17.0)" Id="Microsoft.VisualStudio.Community" />
+        <InstallationTarget Version="[15.0,17.0)" Id="Microsoft.VisualStudio.Pro" />
+        <InstallationTarget Version="[15.0,17.0)" Id="Microsoft.VisualStudio.Enterprise" />
+    </Installation>
+
+    <Dependencies>
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.6,)" />
+    </Dependencies>
+
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0, 17.0)" DisplayName="Visual Studio core editor" />
+    </Prerequisites>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    </Assets>
+</PackageManifest>

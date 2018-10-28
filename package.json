@@ -1,0 +1,9 @@
+{
+  "version": "1.0.7",
+  "description": "Simple",
+  "author": "Vladimir Chirikov",
+  "scripts": {
+    "install_tools": "npm install -g commitizen cz-conventional-changelog",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md --same-file"
+  }
+}

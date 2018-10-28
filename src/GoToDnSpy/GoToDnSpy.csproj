@@ -1,0 +1,117 @@
+﻿<Project>
+  <!-- Set these early for VSSDK to work -->
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
+    <SolutionDir Condition="'$(SolutionDir)' == ''">..\..\</SolutionDir>
+    <BaseOutputPath>..\..\artifacts\bin</BaseOutputPath>
+    <BaseIntermediateOutputPath>..\..\artifacts\obj\GoToDnSpy\</BaseIntermediateOutputPath>
+    <OutputPath>..\..\artifacts\bin\</OutputPath>
+    <IntermediateOutputPath>..\..\artifacts\obj\GoToDnSpy\</IntermediateOutputPath>
+    <RootNamespace>GoToDnSpy</RootNamespace>
+  </PropertyGroup>
+
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Copyright>Vladimir Chirikov</Copyright>
+    <Authors>Vladimir Chirikov</Authors>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
+    <LangVersion>latest</LangVersion>
+    <Product>GoToDnSpy</Product>
+    <Description>GoToDnSpy vsix extension provide fast access to dnSpy decompiler</Description>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <NoLogo>true</NoLogo>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)src\key.snk</AssemblyOriginatorKeyFile>
+    <ApplicationIcon>$(SolutionDir)docs\img\icon.ico</ApplicationIcon>
+    <SignAssembly>true</SignAssembly>
+
+
+
+    <!-- Vsix special -->
+    <TargetVsixContainer>$(SolutionDir)artifacts\vsix\GoToDnSpy.vsix</TargetVsixContainer>
+    <ZipPackageCompressionLevel>Normal</ZipPackageCompressionLevel>
+    <!-- for pkgdef-->
+    <GeneratePkgDefFile>true</GeneratePkgDefFile>
+  </PropertyGroup>
+
+  <ItemGroup Label="Package references">
+    <!-- Vsix project tools -->
+    <PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk" Version="15.8.243" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="15.8.3252" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+
+    <!-- [Complete VS SDK for vsix](https://github.com/madskristensen/Madskristensen.VisualStudio.SDK) -->
+    <PackageReference Include="Madskristensen.VisualStudio.SDK" Version="15.0.75-pre" />
+
+    <!-- Regular packages -->
+    <!-- https://github.com/NuGet/Home/issues/5899 -->
+    <PackageReference Include="Microsoft.Build" Version="15.8.166" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.9.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="2.9.0" />
+
+    <!-- Analyzers -->
+    <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="15.8.36" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="15.8.168" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+
+  </ItemGroup>
+
+  <ItemGroup Label="VSIX includes">
+    <Content Include="$(SolutionDir)docs\img\icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="$(SolutionDir)LICENSE">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="$(SolutionDir)CHANGELOG.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Label="PkgDef and VSCT">
+    <VSCTCompile Include="GoToDnSpyCommands.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+    </VSCTCompile>
+
+    <EmbeddedResource Update="source.extension.resx">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>source.extension.vsixmanifest</DependentUpon>
+      <MergeWithCTO>true</MergeWithCTO>
+      <ManifestResourceName>VSPackage</ManifestResourceName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- [Extensibility Tools generator](https://github.com/madskristensen/ExtensibilityTools) -->
+  <ItemGroup Label="Extensibility tools generators">
+    <Compile Update="GoToDnSpyCommands.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>GoToDnSpyCommands.vsct</DependentUpon>
+    </Compile>
+
+    <None Update="GoToDnSpyCommands.vsct">
+      <Generator>VsctGenerator</Generator>
+      <LastGenOutput>GoToDnSpyCommands.cs</LastGenOutput>
+    </None>
+    <None Update="source.extension.vsixmanifest">
+      <Generator>VsixManifestGenerator</Generator>
+      <LastGenOutput>source.extension.resx</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+
+
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />
+
+  <Target Name="CreateDirectory for vsix" BeforeTargets="CreateVsixContainer">
+    <MakeDir Directories="$(SolutionDir)artifacts\vsix" />
+  </Target>
+</Project>

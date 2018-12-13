@@ -2,8 +2,9 @@
 
 ## Introduction
 
-Sometimes I need something command like Resharper has "Navigate To Decompiled Sources", but I don't want to buy and install it only for this command. So I created this plugin for quick access to dnSpy.
-BTW, for now, VS 2017.6 Preview can do it with ILSpy.
+Sometimes I need something like Resharper command "Navigate To Decompiled Sources", but I don't want to buy and install R# only for this command. So I created this plugin for quick access to dnSpy.
+BTW, after VS 2017.6 Preview can do it with included ILSpy.
+
 
 
 [dnSpy](https://github.com/0xd4d/dnSpy/) is the best tool for .net reseacher.
@@ -11,7 +12,7 @@ You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnsp
 
 ## Installing
 
-Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstudio.com/vsgallery/02d8452f-a0ec-4cbc-adc7-d050c0f43d54).
+Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=VladimirChirikov.GoToDnSpy).
 
 **Please send positive feedback if you liked the extension :)**
 

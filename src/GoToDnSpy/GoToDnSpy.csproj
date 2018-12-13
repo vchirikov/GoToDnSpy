@@ -37,6 +37,7 @@
     <ZipPackageCompressionLevel>Normal</ZipPackageCompressionLevel>
     <!-- for pkgdef-->
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
+    <RegisterWithCodebase>true</RegisterWithCodebase>
   </PropertyGroup>
 
   <ItemGroup Label="Package references">
@@ -61,6 +62,10 @@
 
   <ItemGroup Label="VSIX includes">
     <Content Include="$(SolutionDir)docs\img\icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="$(SolutionDir)docs\img\preview.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

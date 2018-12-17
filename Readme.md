@@ -6,7 +6,6 @@ Sometimes I need something like Resharper command "Navigate To Decompiled Source
 BTW, after VS 2017.6 Preview can do it with included ILSpy.
 
 
-
 [dnSpy](https://github.com/0xd4d/dnSpy/) is the best tool for .net reseacher.
 You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnspy/branch/master/artifacts) from CI.
 
@@ -18,7 +17,7 @@ Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstu
 
 ## Preview
 
-![Using GoToDnSpy](images/preview.gif)
+![Using GoToDnSpy](docs/img/preview.gif)
 
 
 ## Options
@@ -26,7 +25,7 @@ Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstu
 For work plugin need put path to installed dnSpy in options page.
 You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnspy/branch/master/artifacts) from CI.
 
-![Options GoToDnSpy](images/options.png)
+![Options GoToDnSpy](docs/img/options.png)
 
 ## Using
 
@@ -34,11 +33,11 @@ Place cursor at referenced code (method, event, etc) and run "GoTo dnSpy..." com
 
 GoToDnSpy command can be found in Visual Studio tools menu
 
-![Tools menu with GoTo dnSpy](images/tools_menu.png)
+![Tools menu with GoTo dnSpy](docs/img/tools_menu.png)
 
-You can add and use shortcut for fast run command
+You can add and use a shortcut for fast run command
 
-![Shortcut example](images/shortcut.png)
+![Shortcut example](docs/img/shortcut.png)
 
 
 ## ISSUES

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EnvDTE;
 using Microsoft.VisualStudio.ProjectSystem.Properties;
+using Microsoft.VisualStudio.Shell;
 
 namespace GoToDnSpy
 {
@@ -14,8 +15,9 @@ namespace GoToDnSpy
         public static T FindByNameOrDefault<T>(this Properties properties, string name)
         {
             if (properties == null || string.IsNullOrEmpty(name))
-                return default(T);
+                return default;
 
+            ThreadHelper.ThrowIfNotOnUIThread();
 
             foreach (Property property in properties)
             {
@@ -24,7 +26,7 @@ namespace GoToDnSpy
 
                 return (T) property.Value;
             }
-            return default(T);
+            return default;
         }
 
 
@@ -32,7 +34,9 @@ namespace GoToDnSpy
         {
             if (collection == null)
                 return null;
-            
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             foreach (ProjectItem item in collection)
             {
                 if (string.Compare(item.Name, name, StringComparison.Ordinal) == 0)
@@ -53,6 +57,7 @@ namespace GoToDnSpy
 
         public static EnvDTE.ProjectItem FindProjectItemByNameOrDefault(this Project project, string name, bool recursive) // directory tree recursive find of files
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             // if it's real project we can use find
             if (project.Kind != EnvDTE.Constants.vsProjectKindSolutionItems)
             {
@@ -94,6 +99,7 @@ namespace GoToDnSpy
         /// <returns>string or null</returns>
         public static string GetPropertyOrDefault(this Project project, string name)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             return (project.Properties.FindByNameOrDefault<string>(name) ?? project.GetProjectPropertyNetCoreWorkaround(name))?.Trim();
         }
 
@@ -104,6 +110,7 @@ namespace GoToDnSpy
         /// <returns>output filepath</returns>
         public static string GetOutputFilename(this Project project)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             return (project.Properties.FindByNameOrDefault<string>("OutputFileName") ?? project.GetProjectPropertyNetCoreWorkaround("TargetFileName"))?.Trim();
         }
     }

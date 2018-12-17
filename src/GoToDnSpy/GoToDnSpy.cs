@@ -20,6 +20,9 @@ using EnvDTE;
 using System.Windows.Forms;
 using Microsoft.Build.Evaluation;
 using Microsoft.VisualStudio.ProjectSystem.Properties;
+using Microsoft;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Threading;
 
 namespace GoToDnSpy
 {
@@ -80,12 +83,10 @@ namespace GoToDnSpy
         /// <param name="package">Owner package, not null.</param>
         private GoToDnSpy(Package package)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             try
             {
-                if (package == null)
-                    throw new ArgumentNullException("package");
-
-                _package = package;
+                _package = package ?? throw new ArgumentNullException(nameof(package));
 
                 if (ServiceProvider.GetService(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
                 {
@@ -95,24 +96,17 @@ namespace GoToDnSpy
                 }
 
                 _statusBar = (IVsStatusbar)ServiceProvider.GetService(typeof(SVsStatusbar));
-
-                if (_statusBar == null)
-                    throw new ArgumentNullException(nameof(_statusBar));
+                Assumes.Present(_statusBar);
 
                 _componentModel = (IComponentModel)ServiceProvider.GetService(typeof(SComponentModel));
-
-                if (_componentModel == null)
-                    throw new ArgumentNullException(nameof(_componentModel));
+                Assumes.Present(_componentModel);
 
                 _editorAdaptersFactory = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
-
-                if (_editorAdaptersFactory == null)
-                    throw new ArgumentNullException(nameof(_editorAdaptersFactory));
+                Assumes.Present(_editorAdaptersFactory);
 
                 _dte = (DTE)ServiceProvider.GetService(typeof(DTE));
+                Assumes.Present(_dte);
 
-                if (_dte == null)
-                    throw new ArgumentNullException(nameof(_dte));
             }
             catch (Exception ex)
             {
@@ -130,21 +124,19 @@ namespace GoToDnSpy
         /// Initializes the singleton instance of the command.
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Package package)
-        {
-            Instance = new GoToDnSpy(package);
-        }
+        public static void Initialize(Package package) => Instance = new GoToDnSpy(package);
 
         public static void Output(string msg)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             // Get the output window
             var outputWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
 
             // Ensure that the desired pane is visible
-            var paneGuid = Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
-            IVsOutputWindowPane pane;
+            var paneGuid = VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
             outputWindow.CreatePane(paneGuid, "General", 1, 0);
-            outputWindow.GetPane(paneGuid, out pane);
+            outputWindow.GetPane(paneGuid, out IVsOutputWindowPane pane);
 
             // Output the message
             pane.OutputString(msg);
@@ -159,6 +151,7 @@ namespace GoToDnSpy
         /// <param name="e">Event args.</param>
         private void MenuItemCallback(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             try
             {
                 _statusBar.SetText("");
@@ -184,9 +177,10 @@ namespace GoToDnSpy
                     return;
                 }
 
-                SyntaxNode rootSyntaxNode = document.GetSyntaxRootAsync().Result;
+                SyntaxNode rootSyntaxNode = ThreadHelper.JoinableTaskFactory.Run(() => document.GetSyntaxRootAsync());
                 SyntaxToken st = rootSyntaxNode.FindToken(caretPosition);
-                SemanticModel semanticModel = document.GetSemanticModelAsync().Result;
+                SemanticModel semanticModel = ThreadHelper.JoinableTaskFactory.Run(() => document.GetSemanticModelAsync());
+
                 ISymbol symbol = null;
                 var parentKind = st.Parent.Kind();
                 if (st.Kind() == SyntaxKind.IdentifierToken && (
@@ -220,13 +214,15 @@ namespace GoToDnSpy
 
                 TryPreprocessLocal(ref symbol);
 
-                INamedTypeSymbol typeSymbol = null;
                 string memberName = null;
 
                 MemberType memberType = 0;
 
                 // todo: view SLaks.Ref12.Services.RoslynSymbolResolver
-                if ((symbol == null) || ((!TryHandleAsType(symbol, out typeSymbol)) && (!TryHandleAsMember(symbol, out typeSymbol, out memberName, out memberType))))
+                if (symbol == null || (
+                        (!TryHandleAsType(symbol, out INamedTypeSymbol typeSymbol))
+                     && (!TryHandleAsMember(symbol, out typeSymbol, out memberName, out memberType))
+                ))
                 {
                     var msg = $"{st.Text} is not a valid identifier. token: {st.ToString()}, Kind: {st.Kind()}";
                     _statusBar.SetText(msg);
@@ -262,6 +258,7 @@ namespace GoToDnSpy
 
         private string GetCurrentFileOutputAssembly()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var project = _dte.ActiveDocument?.ProjectItem?.ContainingProject;
 
             // if it's fake project, this object doesn't have ConfigurationManager, we try find another object
@@ -282,6 +279,7 @@ namespace GoToDnSpy
 
         private string GetTargetOutputPath(EnvDTE.Project project)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var configManager = project.ConfigurationManager;
 
             string outputPath = (configManager != null) ?
@@ -302,7 +300,7 @@ namespace GoToDnSpy
             }
 
             // check outputPath type (shares and C:\ is absolute path and we can just return)
-            if ((outputPath.StartsWith("\\\\", StringComparison.Ordinal))
+            if (outputPath.StartsWith("\\\\", StringComparison.Ordinal)
                 || (outputPath.Length >= 2 && outputPath[1] == Path.VolumeSeparatorChar))
             {
                 directory = outputPath;
@@ -315,12 +313,9 @@ namespace GoToDnSpy
             return Path.Combine(directory, project.GetOutputFilename() ?? Path.ChangeExtension(outputFilename, ".dll"));
         }
 
-        string ReadDnSpyPath()
-        {
-            return ((SettingsDialog)_package.GetDialogPage(typeof(SettingsDialog)))?.DnSpyPath;
-        }
+        private string ReadDnSpyPath() => ((SettingsDialog)_package.GetDialogPage(typeof(SettingsDialog)))?.DnSpyPath;
 
-        static string BuildDnSpyArguments(string asmPath, string typeName, string memberName, MemberType memberType)
+        private static string BuildDnSpyArguments(string asmPath, string typeName, string memberName, MemberType memberType)
         {
             string result = $"\"{asmPath}\" --dont-load-files --select {(memberName == null ? 'T' : memberType.ToString()[0])}:{typeName}";
             if (memberName != null)
@@ -328,9 +323,9 @@ namespace GoToDnSpy
             return result;
         }
 
-
-        string GetAssemblyPath(SemanticModel semanticModel, string assemblyDef)
+        private string GetAssemblyPath(SemanticModel semanticModel, string assemblyDef)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             IEnumerator<AssemblyIdentity> refAsmNames = semanticModel.Compilation.ReferencedAssemblyNames.GetEnumerator();
             IEnumerator<MetadataReference> refs = semanticModel.Compilation.References.GetEnumerator();
 
@@ -371,10 +366,11 @@ namespace GoToDnSpy
 
             return null;
         }
+
         /// <summary>
         /// Find type of local symbol
         /// </summary>
-        static bool TryPreprocessLocal(ref ISymbol symbol)
+        private static bool TryPreprocessLocal(ref ISymbol symbol)
         {
             if (symbol is ILocalSymbol loc)
             {
@@ -384,13 +380,13 @@ namespace GoToDnSpy
             return false;
         }
 
-        static bool TryHandleAsType(ISymbol symbol, out INamedTypeSymbol type)
+        private static bool TryHandleAsType(ISymbol symbol, out INamedTypeSymbol type)
         {
             type = symbol as INamedTypeSymbol;
             return type != null;
         }
 
-        static bool TryHandleAsMember(ISymbol symbol, out INamedTypeSymbol type, out string memberName, out MemberType memberType)
+        private static bool TryHandleAsMember(ISymbol symbol, out INamedTypeSymbol type, out string memberName, out MemberType memberType)
         {
             if (symbol is IFieldSymbol fieldSymbol)
             {
@@ -427,9 +423,7 @@ namespace GoToDnSpy
         }
 
         private static string GetAssemblyDefinition(IAssemblySymbol assemblySymbol)
-        {
-            return assemblySymbol.Identity.ToString();
-        }
+            => assemblySymbol.Identity.ToString();
 
         private static string GetRealAssemblyPath(string asmPath)
         {
@@ -461,8 +455,8 @@ namespace GoToDnSpy
         private IWpfTextView GetTextView()
         {
             var textManager = (IVsTextManager) ServiceProvider.GetService(typeof(SVsTextManager));
-            IVsTextView textView;
-            textManager.GetActiveView(1, null, out textView);
+            Assumes.Present(textManager);
+            textManager.GetActiveView(1, null, out IVsTextView textView);
             return _editorAdaptersFactory.GetWpfTextView(textView);
         }
 

@@ -169,6 +169,11 @@ namespace GoToDnSpy
                 }
 
                 var textView = GetTextView();
+                if(textView == null)
+                {
+                    _statusBar.SetText("Can't get text view, please open the file and execute the function while a document window is active.");
+                    return;
+                }
                 SnapshotPoint caretPosition = textView.Caret.Position.BufferPosition;
                 Microsoft.CodeAnalysis.Document document = caretPosition.Snapshot.GetOpenDocumentInCurrentContextWithChanges();
                 if (document == null)
@@ -454,9 +459,10 @@ namespace GoToDnSpy
 
         private IWpfTextView GetTextView()
         {
-            var textManager = (IVsTextManager) ServiceProvider.GetService(typeof(SVsTextManager));
+            var textManager = (IVsTextManager) ServiceProvider.GetService(typeof(VsTextManagerClass));
             Assumes.Present(textManager);
-            textManager.GetActiveView(1, null, out IVsTextView textView);
+            if (textManager.GetActiveView(fMustHaveFocus: 0, null, out IVsTextView textView) != 0)
+                return null;
             return _editorAdaptersFactory.GetWpfTextView(textView);
         }
 

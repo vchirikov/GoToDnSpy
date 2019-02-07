@@ -1,5 +1,5 @@
 {
-  "version": "1.0.7",
+  "version": "1.0.8",
   "author": "Vladimir Chirikov",
   "scripts": {
     "install_tools": "npm install -g commitizen cz-conventional-changelog",

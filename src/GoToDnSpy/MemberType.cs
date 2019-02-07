@@ -1,4 +1,4 @@
-﻿namespace GoToDnSpy
+namespace GoToDnSpy
 {
     enum MemberType
     {
@@ -7,5 +7,4 @@
         Method,
         Event,
     }
-    
 }

@@ -1,3 +1,18 @@
+<a name="1.0.8"></a>
+## 1.0.8 (2019-02-07)
+
+
+### Bug Fixes
+
+* Fix issue with getting IWpfTextView ([455f493](https://github.com/vchirikov/GoToDnSpy/commit/455f493)), closes [#5](https://github.com/vchirikov/GoToDnSpy/issues/5) [#7](https://github.com/vchirikov/GoToDnSpy/issues/7)
+
+
+### Features
+
+* Add VS 2019 support ([d1eacf0](https://github.com/vchirikov/GoToDnSpy/commit/d1eacf0))
+
+
+
 <a name="1.0.7"></a>
 ## 1.0.7 (2018-12-13)
 

@@ -36,8 +36,11 @@
          group as the part of a menu contained between two lines. The parent of a group
          must be a menu. -->
     <Groups>
-      <Group guid="guidGoToDnSpyPackageCmdSet" id="MyMenuGroup" priority="0x0600">
+      <Group guid="guidGoToDnSpyPackageCmdSetMenu" id="MyMenuGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS"/>
+      </Group>
+      <Group guid="guidGoToDnSpyPackageCmdSetContextMenu" id="EditorContextMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
       </Group>
     </Groups>
 
@@ -52,8 +55,15 @@
               <CommandFlag>DefaultInvisible</CommandFlag>
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
-      <Button guid="guidGoToDnSpyPackageCmdSet" id="GoToDnSpyId" priority="0x0100" type="Button">
-        <Parent guid="guidGoToDnSpyPackageCmdSet" id="MyMenuGroup" />
+      <Button guid="guidGoToDnSpyPackageCmdSetMenu" id="GoToDnSpyId" priority="0x0100" type="Button">
+        <Parent guid="guidGoToDnSpyPackageCmdSetMenu" id="MyMenuGroup" />
+        <Icon guid="guidImages" id="ico" />
+        <Strings>
+          <ButtonText>GoTo dnSpy...</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidGoToDnSpyPackageCmdSetContextMenu" id="GoToDnSpyContextMenuId" priority="0x0100" type="Button">
+        <Parent guid="guidGoToDnSpyPackageCmdSetContextMenu" id="EditorContextMenuGroup" />
         <Icon guid="guidImages" id="ico" />
         <Strings>
           <ButtonText>GoTo dnSpy...</ButtonText>
@@ -77,13 +87,18 @@
     <GuidSymbol name="guidGoToDnSpyPackage" value="{c827298b-8d81-47c0-bed9-cdf072e68d4f}" />
 
     <!-- This is the guid used to group the menu commands together -->
-    <GuidSymbol name="guidGoToDnSpyPackageCmdSet" value="{4843d15e-dca8-4935-8ba3-66c4d25fb295}">
+    <GuidSymbol name="guidGoToDnSpyPackageCmdSetMenu" value="{4843d15e-dca8-4935-8ba3-66c4d25fb295}">
       <IDSymbol name="MyMenuGroup" value="0x1020" />
       <IDSymbol name="GoToDnSpyId" value="0x0100" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{36462768-caed-442f-be73-841d637c2e3b}" >
       <IDSymbol name="ico" value="1" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidGoToDnSpyPackageCmdSetContextMenu" value="{d5d8efc6-dc17-4229-9088-dddf76ac0ab3}">
+      <IDSymbol value="0x3020" name="EditorContextMenuGroup" />
+      <IDSymbol value="0x4020" name="GoToDnSpyContextMenuId" />
     </GuidSymbol>
   </Symbols>
 </CommandTable>

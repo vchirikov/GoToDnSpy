@@ -1,10 +1,10 @@
 namespace GoToDnSpy
 {
-    enum MemberType
+    internal enum MemberType
     {
-        Field,
-        Property,
-        Method,
-        Event,
+        Field = 0,
+        Property = 1,
+        Method = 2,
+        Event = 3,
     }
 }

@@ -83,6 +83,11 @@
     <VSCTCompile Include="GoToDnSpyCommands.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
+    <Compile Update="GoToDnSpyCommands.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>GoToDnSpyCommands.vsct</DependentUpon>
+    </Compile>
 
     <EmbeddedResource Update="source.extension.resx">
       <DesignTime>True</DesignTime>
@@ -95,11 +100,6 @@
 
   <!-- [Extensibility Tools generator](https://github.com/madskristensen/ExtensibilityTools) -->
   <ItemGroup Label="Extensibility tools generators">
-    <Compile Update="GoToDnSpyCommands.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>GoToDnSpyCommands.vsct</DependentUpon>
-    </Compile>
 
     <None Update="GoToDnSpyCommands.vsct">
       <Generator>VsctGenerator</Generator>

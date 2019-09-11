@@ -32,16 +32,6 @@ namespace GoToDnSpy
     internal sealed partial class GoToDnSpy
     {
         /// <summary>
-        /// Command ID.
-        /// </summary>
-        public const int CommandId = 0x0100;
-
-        /// <summary>
-        /// Command menu group (command set GUID).
-        /// </summary>
-        public static readonly Guid CommandSet = new Guid("4843d15e-dca8-4935-8ba3-66c4d25fb295");
-
-        /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
         private readonly Package _package;
@@ -90,9 +80,14 @@ namespace GoToDnSpy
 
                 if (ServiceProvider.GetService(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
                 {
-                    var menuCommandID = new CommandID(CommandSet, CommandId);
-                    var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
+                    // Add tools menu command
+                    var menuCommandId = new CommandID(PackageGuids.guidGoToDnSpyPackageCmdSetMenu, PackageIds.GoToDnSpyId);
+                    var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandId);
                     commandService.AddCommand(menuItem);
+                    // Add editor context menu command (right click)
+                    var ctxMenuCommand = new CommandID(PackageGuids.guidGoToDnSpyPackageCmdSetContextMenu, PackageIds.GoToDnSpyContextMenuId);
+                    var ctxMenuItem = new MenuCommand(this.MenuItemCallback, ctxMenuCommand);
+                    commandService.AddCommand(ctxMenuItem);
                 }
 
                 _statusBar = (IVsStatusbar)ServiceProvider.GetService(typeof(SVsStatusbar));

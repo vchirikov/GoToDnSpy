@@ -32,16 +32,11 @@ namespace GoToDnSpy
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [Guid(GoToDnSpyPackage.PackageGuidString)]
+    [Guid(PackageGuids.guidGoToDnSpyPackageString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    [ProvideOptionPage(typeof(SettingsDialog), "GoTo dnSpy", "General", 0, 0, true)]
+    [ProvideOptionPage(typeof(SettingsDialog), "GoTo dnSpy", "General", 0, 0, supportsAutomation: true)]
     public sealed class GoToDnSpyPackage : Package
     {
-        /// <summary>
-        /// GoToDnSpyPackage GUID string.
-        /// </summary>
-        public const string PackageGuidString = "c827298b-8d81-47c0-bed9-cdf072e68d4f";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="GoToDnSpy"/> class.
         /// </summary>

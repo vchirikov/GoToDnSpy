@@ -1,3 +1,10 @@
+<a name="1.0.9"></a>
+## 1.0.9 (2019-09-11)
+
+### Features
+
+* Add context menu command ([0ed689d](https://github.com/vchirikov/GoToDnSpy/commit/0ed689d)), closes [#8](https://github.com/vchirikov/GoToDnSpy/issues/8)
+
 <a name="1.0.8"></a>
 ## 1.0.8 (2019-02-07)
 

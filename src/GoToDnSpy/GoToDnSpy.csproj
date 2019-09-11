@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <!-- Set these early for VSSDK to work -->
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
@@ -14,7 +14,7 @@
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
 
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <IsPackable>false</IsPackable>
     <Copyright>Vladimir Chirikov</Copyright>
     <Authors>Vladimir Chirikov</Authors>
@@ -43,20 +43,19 @@
   <ItemGroup Label="Package references">
     <!-- Vsix project tools -->
     <PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk" Version="15.8.243" />
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="15.8.3252" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="15.9.3039" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
-    <!-- [Complete VS SDK for vsix](https://github.com/madskristensen/Madskristensen.VisualStudio.SDK) -->
-    <PackageReference Include="Madskristensen.VisualStudio.SDK" Version="15.0.75-pre" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="15.9.3" />
 
     <!-- Regular packages -->
     <!-- https://github.com/NuGet/Home/issues/5899 -->
-    <PackageReference Include="Microsoft.Build" Version="15.8.166" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.9.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="2.9.0" />
+    <PackageReference Include="Microsoft.Build" Version="15.9.20" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.10.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="2.10.0" />
 
     <!-- Analyzers -->
     <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="15.8.36" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="15.8.192" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="15.8.209" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
   </ItemGroup>
 
@@ -83,11 +82,6 @@
     <VSCTCompile Include="GoToDnSpyCommands.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
-    <Compile Update="GoToDnSpyCommands.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>GoToDnSpyCommands.vsct</DependentUpon>
-    </Compile>
 
     <EmbeddedResource Update="source.extension.resx">
       <DesignTime>True</DesignTime>
@@ -98,17 +92,27 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <!-- [Extensibility Tools generator](https://github.com/madskristensen/ExtensibilityTools) -->
-  <ItemGroup Label="Extensibility tools generators">
-
+  <!-- [VSIX Synchronizer](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.VsixSynchronizer) -->
+  <ItemGroup Label="VSIX Synchronizer">
+    <Compile Update="GoToDnSpyCommands.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>GoToDnSpyCommands.vsct</DependentUpon>
+    </Compile>
+    <Compile Update="source.extension.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>source.extension.vsixmanifest</DependentUpon>
+    </Compile>
     <None Update="GoToDnSpyCommands.vsct">
-      <Generator>VsctGenerator</Generator>
+      <Generator>VsctCodeGenerator</Generator>
       <LastGenOutput>GoToDnSpyCommands.cs</LastGenOutput>
     </None>
     <None Update="source.extension.vsixmanifest">
       <Generator>VsixManifestGenerator</Generator>
-      <LastGenOutput>source.extension.resx</LastGenOutput>
+      <LastGenOutput>source.extension.cs</LastGenOutput>
     </None>
+
   </ItemGroup>
 
 

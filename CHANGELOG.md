@@ -1,3 +1,12 @@
+<a name="1.0.10"></a>
+## 1.0.10 (2019-09-11)
+
+### Features
+
+* Migrate to AsyncPackage, update dependencies ([f58a5c3](https://github.com/vchirikov/GoToDnSpy/commit/f58a5c3))
+
+
+
 <a name="1.0.9"></a>
 ## 1.0.9 (2019-09-11)
 

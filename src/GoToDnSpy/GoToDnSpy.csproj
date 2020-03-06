@@ -1,15 +1,16 @@
-<Project>
+﻿<Project>
   <!-- Set these early for VSSDK to work -->
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
-    <SolutionDir Condition="'$(SolutionDir)' == ''">..\..\</SolutionDir>
+    <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory.TrimEnd('\').TrimEnd('/'))\..\..\</SolutionDir>
     <BaseOutputPath>..\..\artifacts\bin</BaseOutputPath>
-    <BaseIntermediateOutputPath>..\..\artifacts\obj\GoToDnSpy\</BaseIntermediateOutputPath>
-    <OutputPath>..\..\artifacts\bin\</OutputPath>
-    <IntermediateOutputPath>..\..\artifacts\obj\GoToDnSpy\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>$(SolutionDir)artifacts\obj\GoToDnSpy\</BaseIntermediateOutputPath>
+    <OutputPath>$(SolutionDir)artifacts\bin\</OutputPath>
+    <IntermediateOutputPath>$(SolutionDir)artifacts\obj\GoToDnSpy\</IntermediateOutputPath>
     <RootNamespace>GoToDnSpy</RootNamespace>
   </PropertyGroup>
+
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
 
@@ -120,7 +121,8 @@
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />
 
+  <!-- https://github.com/microsoft/VSProjectSystem/issues/298 -->
   <Target Name="CreateDirectory for vsix" BeforeTargets="CreateVsixContainer">
-    <MakeDir Directories="$(SolutionDir)artifacts\vsix" />
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(TargetVsixContainer)))"/>
   </Target>
 </Project>

@@ -1,3 +1,16 @@
+<a name="1.1.0"></a>
+## 1.1.0 (2020-03-07)
+
+### Features
+
+* Now the plugin check if symbol is from netstandard.dll, and if so sources will be searched on [source.dot.net](https://source.dot.net) ([5a4c1592](https://github.com/vchirikov/GoToDnSpy/commit/5a4c1592))
+* Required nupkg packages have been updated.
+* Small bugfixes and improvements.
+
+### Bug Fixes
+
+* I think that [#9](https://github.com/vchirikov/GoToDnSpy/issues/9) was fixed due to packages update.
+
 <a name="1.0.10"></a>
 ## 1.0.10 (2019-09-11)
 
@@ -40,7 +53,7 @@
 <a name="1.0.6"></a>
 ## 1.0.6
 
-* Added support for net framework referenced assemblies. [issue](https://github.com/verysimplenick/GoToDnSpy/issues/2)
+* Added support for net framework referenced assemblies. [issue](https://github.com/vchirikov/GoToDnSpy/issues/2)
 
 <a name="1.0.5"></a>
 ## 1.0.5

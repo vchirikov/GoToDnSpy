@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.ProjectSystem.Properties;
 using Microsoft;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Threading;
+using System.Security.Cryptography;
 
 namespace GoToDnSpy
 {
@@ -47,6 +48,11 @@ namespace GoToDnSpy
         public static GoToDnSpy Instance { get; private set; }
 
         /// <summary>
+        /// Netcore/netstandard libs can returns us reference assembly netstandard.dll, we don't know how to map it. wi'll try to find right assembly
+        /// </summary>
+        public readonly static NamespaceToAssemblyMapper NetstandardMapper = new NamespaceToAssemblyMapper();
+
+        /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
         private IServiceProvider ServiceProvider => _package;
@@ -65,6 +71,8 @@ namespace GoToDnSpy
         /// EnvDTE service
         /// </summary>
         private readonly DTE _dte;
+
+        private readonly static char[] _pathTrimChars = new[] { '\r', '\n', ' ', '\'', '\"' };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GoToDnSpy"/> class.
@@ -101,19 +109,13 @@ namespace GoToDnSpy
 
                 _dte = (DTE)ServiceProvider.GetService(typeof(DTE));
                 Assumes.Present(_dte);
-
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Some error in GoToDnSpy extensiton.\n Please take screenshot and create issue on github with this error\n{ex.ToString()}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Some error in GoToDnSpy extensiton.\n Please take screenshot and create issue on github with this error\n{ex}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 throw;
             }
-
         }
-
-
-
-
 
         /// <summary>
         /// Initializes the singleton instance of the command.
@@ -144,42 +146,44 @@ namespace GoToDnSpy
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        private void MenuItemCallback(object sender, EventArgs e)
+#pragma warning disable VSTHRD100 // Avoid async void methods
+        private async void MenuItemCallback(object sender, EventArgs e)
+#pragma warning restore VSTHRD100 // Avoid async void methods
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
             try
             {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 _statusBar.SetText("");
-                var dnSpyPath = ReadDnSpyPath()?.Trim(new []{ '\r', '\n', ' ', '\'', '\"'});
+                var dnSpyPath = ReadDnSpyPath()?.Trim(_pathTrimChars);
                 if (string.IsNullOrWhiteSpace(dnSpyPath))
                 {
-                    MessageBox.Show("Set dnSpy path in options first!", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("You must specify dnSpy path in options", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 if (!File.Exists(dnSpyPath))
                 {
-                    MessageBox.Show($"File '{dnSpyPath}' not exists!", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"File '{dnSpyPath}' doesn't exist!", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 var textView = GetTextView();
-                if(textView == null)
+                if (textView == null)
                 {
-                    _statusBar.SetText("Can't get text view, please open the file and execute the function while a document window is active.");
+                    _statusBar.SetText("Can't get a text view, please open the file and execute the command while a document window is active.");
                     return;
                 }
                 SnapshotPoint caretPosition = textView.Caret.Position.BufferPosition;
                 Microsoft.CodeAnalysis.Document document = caretPosition.Snapshot.GetOpenDocumentInCurrentContextWithChanges();
                 if (document == null)
                 {
-                    _statusBar.SetText("Execute the function while a document window is active.");
+                    _statusBar.SetText("You should execute the command while a document window is active.");
                     return;
                 }
 
-                SyntaxNode rootSyntaxNode = ThreadHelper.JoinableTaskFactory.Run(() => document.GetSyntaxRootAsync());
+                SyntaxNode rootSyntaxNode = await document.GetSyntaxRootAsync().ConfigureAwait(true);
                 SyntaxToken st = rootSyntaxNode.FindToken(caretPosition);
-                SemanticModel semanticModel = ThreadHelper.JoinableTaskFactory.Run(() => document.GetSemanticModelAsync());
+                SemanticModel semanticModel = await document.GetSemanticModelAsync().ConfigureAwait(true);
 
                 ISymbol symbol = null;
                 var parentKind = st.Parent.Kind();
@@ -209,7 +213,7 @@ namespace GoToDnSpy
                 else
                 {
                     SymbolInfo si = semanticModel.GetSymbolInfo(st.Parent);
-                    symbol = si.Symbol ?? (si.GetType().GetProperty("CandidateSymbols").GetValue(si) as IEnumerable<ISymbol>)?.FirstOrDefault();
+                    symbol = si.Symbol ?? si.CandidateSymbols.FirstOrDefault();
                 }
 
                 TryPreprocessLocal(ref symbol);
@@ -224,14 +228,14 @@ namespace GoToDnSpy
                      && (!TryHandleAsMember(symbol, out typeSymbol, out memberName, out memberType))
                 ))
                 {
-                    var msg = $"{st.Text} is not a valid identifier. token: {st.ToString()}, Kind: {st.Kind()}";
+                    var msg = $"{st.Text} is not a valid identifier. token: {st}, Kind: {st.Kind()}";
                     _statusBar.SetText(msg);
                     Debug.WriteLine(msg);
                     return;
                 }
 
                 string typeNamespace = GetFullNamespace(typeSymbol);
-                string typeName =   typeNamespace + "." + typeSymbol.MetadataName;
+                string typeName = typeNamespace + "." + typeSymbol.MetadataName;
                 string asmDef = GetAssemblyDefinition(typeSymbol.ContainingAssembly);
                 string asmPath = GetAssemblyPath(semanticModel, asmDef);
 
@@ -245,16 +249,78 @@ namespace GoToDnSpy
                     MessageBox.Show($"Try build project first;\nAssembly '{asmDef}' with type {typeName} not found, path:\n{asmPath}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+                // for netstandard path will be c:\work\dotnet\sdk-latest-bin\packs\NETStandard.Library.Ref\2.1.0\ref\netstandard2.1\
+                if (asmPath.IndexOf("NETStandard.Library.Ref", StringComparison.Ordinal) > 0)
+                {
 
+                    const string baseUrl = "https://source.dot.net";
+                    var docId = GetDocumentationCommentId(memberName is null ? typeSymbol : symbol);
+                    var assemblyName = NetstandardMapper.Get(typeNamespace, typeName);
+                    if (assemblyName != null)
+                    {
+                        var url = baseUrl + "/" + assemblyName + "/a.html#" + GetMD5Hash(docId, 16);
+                        System.Diagnostics.Process.Start(new ProcessStartInfo() {
+                            UseShellExecute = true,
+                            FileName = url,
+                        });
+                        return;
+                    }
+                }
                 System.Diagnostics.Process.Start(dnSpyPath, BuildDnSpyArguments(asmPath, typeName, memberName, memberType));
 
             }
             catch (Exception ex)
             {
-                _statusBar.SetText(ex.Message.ToString());
-                MessageBox.Show($"Some error in GoToDnSpy extensiton.\n Please take screenshot and create issue on github with this error\n{ex.ToString()}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _statusBar.SetText(ex.Message);
+                MessageBox.Show($"Some error in GoToDnSpy extensiton.\n Please take a screenshot and create issue on github with this error\n{ex}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private static string GetDocumentationCommentId(ISymbol symbol)
+        {
+            if (!symbol.IsDefinition)
+            {
+                symbol = symbol.OriginalDefinition;
+            }
+
+            string result = symbol.GetDocumentationCommentId();
+
+            if (result == null)     // goto labels have no doc comment ID
+                return null;
+
+            result = result.Replace("#ctor", "ctor");
+
+            return result;
+        }
+
+
+        private static string GetMD5Hash(string input, int digits)
+        {
+            using var md5 = MD5.Create();
+            var bytes = Encoding.UTF8.GetBytes(input);
+            var hashBytes = md5.ComputeHash(bytes);
+            return ByteArrayToHexString(hashBytes, digits);
+        }
+
+        private static string ByteArrayToHexString(byte[] bytes, int digits = 0)
+        {
+            if (digits == 0)
+                digits = bytes.Length * 2;
+
+            char[] c = new char[digits];
+            byte b;
+            for (int i = 0; i < digits / 2; i++)
+            {
+                b = (byte)(bytes[i] >> 4);
+                c[i * 2] = (char)(b > 9 ? b + 87 : b + 0x30);
+                b = (byte)(bytes[i] & 0xF);
+                c[(i * 2) + 1] = (char)(b > 9 ? b + 87 : b + 0x30);
+            }
+            return new string(c);
+        }
+
+
+
 
         private string GetCurrentFileOutputAssembly()
         {
@@ -263,11 +329,10 @@ namespace GoToDnSpy
 
             // if it's fake project, this object doesn't have ConfigurationManager, we try find another object
             if (project != null && (
-                        string.CompareOrdinal(project.UniqueName, EnvDTE.Constants.vsMiscFilesProjectUniqueName)     == 0
+                        string.CompareOrdinal(project.UniqueName, EnvDTE.Constants.vsMiscFilesProjectUniqueName) == 0
                      || string.CompareOrdinal(project.UniqueName, EnvDTE.Constants.vsSolutionItemsProjectUniqueName) == 0
                 ))
             {
-
                 project = _dte.Solution.FindProjectItem(_dte.ActiveDocument.FullName)?.ContainingProject;
             }
 
@@ -280,11 +345,8 @@ namespace GoToDnSpy
         private string GetTargetOutputPath(EnvDTE.Project project)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            var configManager = project.ConfigurationManager;
 
-            string outputPath = (configManager != null) ?
-                                    configManager.ActiveConfiguration?.Properties.FindByNameOrDefault<string>("OutputPath")?.Trim() :
-                                    project.GetPropertyOrDefault("OutputPath")?.Trim();
+            string outputPath = project.GetPropertyOrDefault("OutputPath");
 
             if (string.IsNullOrWhiteSpace(outputPath))
             {
@@ -292,7 +354,7 @@ namespace GoToDnSpy
                 return null;
             }
 
-            string directory = null;
+            string directory;
             string outputFilename = project.FileName;
             if (string.IsNullOrWhiteSpace(outputFilename))
             {
@@ -349,7 +411,9 @@ namespace GoToDnSpy
                 }
                 // not found, reference is a path
                 if (project == null)
+                {
                     return TryCorrectReferenceAssemblyPath(displayName, assemblyDef);
+                }
 
                 // project reference
                 return GetTargetOutputPath(project) ?? displayName;
@@ -425,22 +489,11 @@ namespace GoToDnSpy
         private static string GetAssemblyDefinition(IAssemblySymbol assemblySymbol)
             => assemblySymbol.Identity.ToString();
 
-        private static string GetRealAssemblyPath(string asmPath)
-        {
-            try
-            {
-                return Assembly.LoadFile(asmPath)?.Location ?? asmPath;
-            }
-            catch
-            { }
-            return asmPath;
-        }
-
         private static string GetFullNamespace(INamedTypeSymbol typeSymbol)
         {
             INamespaceSymbol nsSym = typeSymbol.ContainingNamespace;
             var sb = new StringBuilder();
-            while ((nsSym != null) && (!nsSym.IsGlobalNamespace))
+            while (nsSym?.IsGlobalNamespace == false)
             {
                 if (sb.Length == 0)
                     sb.Append(nsSym.Name);
@@ -454,7 +507,7 @@ namespace GoToDnSpy
 
         private IWpfTextView GetTextView()
         {
-            var textManager = (IVsTextManager) ServiceProvider.GetService(typeof(VsTextManagerClass));
+            var textManager = (IVsTextManager)ServiceProvider.GetService(typeof(VsTextManagerClass));
             Assumes.Present(textManager);
             if (textManager.GetActiveView(fMustHaveFocus: 0, null, out IVsTextView textView) != 0)
                 return null;
@@ -464,17 +517,16 @@ namespace GoToDnSpy
         /// <summary>
         /// Assemblies in "C:\Program Files\Reference Assemblies\" doesn't have implementation.
         /// Try to get the assembly from GAC
-        /// See https://github.com/verysimplenick/GoToDnSpy/issues/2
+        /// See https://github.com/vchirikov/GoToDnSpy/issues/2
         /// </summary>
         private static string TryCorrectReferenceAssemblyPath(string path, string assemblyDef)
         {
             if (!GacHelper.IsReferenceAssembly(path))
                 return path;
 
-            var assemblyName = new AssemblyName(assemblyDef);
-            var filepath     = GacHelper.FindAssemblyInGac(assemblyName);
+            var netfxGacPath = GacHelper.FindAssemblyInGac(assemblyDef);
 
-            return filepath ?? path;
+            return netfxGacPath ?? path;
         }
     }
 }

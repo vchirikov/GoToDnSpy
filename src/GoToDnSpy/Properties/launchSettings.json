@@ -3,8 +3,9 @@
     "Debug GoToDnSpy": {
       "commandName": "Executable",
       "executablePath": "$(DevenvDir)devenv.exe",
-      "commandLineArgs": "/rootsuffix exp",
-      "environmentVariables": { }
+      "commandLineArgs": "/rootsuffix exp", //  /updateconfiguration
+      //"commandLineArgs": "/rootsuffix exp /updateconfiguration",
+      "environmentVariables": {}
     }
   }
 }

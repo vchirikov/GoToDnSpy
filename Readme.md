@@ -2,9 +2,7 @@
 
 ## Introduction
 
-Sometimes I need something like Resharper command "Navigate To Decompiled Sources", but I don't want to buy and install R# only for this command. So I created this plugin for quick access to dnSpy.
-BTW, after VS 2017.6 Preview can do it with included ILSpy.
-
+Sometimes I need something like Resharper command "Navigate To Decompiled Sources", but I don't want to buy and use R# only for this command. So I have created this plugin for quick access to dnSpy or corefx sources.
 
 [dnSpy](https://github.com/0xd4d/dnSpy/) is the best tool for .net reseacher.
 You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnspy/branch/master/artifacts) from CI.
@@ -13,7 +11,7 @@ You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnsp
 
 Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=VladimirChirikov.GoToDnSpy).
 
-**Please send positive feedback if you liked the extension :)**
+**Please send positive feedback if you like the extension :)**
 
 ## Preview
 
@@ -22,20 +20,23 @@ Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstu
 
 ## Options
 
-For work plugin need put path to installed dnSpy in options page.
+The plugin needs the path to installed dnSpy on options page.
 You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnspy/branch/master/artifacts) from CI.
 
 ![Options GoToDnSpy](docs/img/options.png)
 
 ## Using
 
-Place cursor at referenced code (method, event, etc) and run "GoTo dnSpy..." command.
+Place cursor at the code (method, event, etc) and run "GoTo dnSpy..." command.
 
-GoToDnSpy command can be found in Visual Studio tools menu
+GoToDnSpy command can be found in Visual Studio tools and right-click context menu.
 
 ![Tools menu with GoTo dnSpy](docs/img/tools_menu.png)
 
-You can add and use a shortcut for fast run command
+If this is a runtime libraries code the plugin will run a browser with [source.dot.net](https://source.dot.net).
+
+
+You can add and use a shortcut to quickly launch the command.
 
 ![Shortcut example](docs/img/shortcut.png)
 

@@ -3,7 +3,7 @@
 build.ps1
 build.sh
 # Cake tools
-build/tools/
+tools/
 # Can contain personal info
 
 **/Properties/launchSettings.json
@@ -247,5 +247,5 @@ _Pvt_Extensions
 # FAKE - F# Make
 .fake/
 /CodeMaid.config
+**/node_modules
 /desktop.ini
-/package-lock.json

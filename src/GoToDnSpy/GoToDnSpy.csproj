@@ -9,6 +9,10 @@
     <OutputPath>$(SolutionDir)artifacts\bin\</OutputPath>
     <IntermediateOutputPath>$(SolutionDir)artifacts\obj\GoToDnSpy\</IntermediateOutputPath>
     <RootNamespace>GoToDnSpy</RootNamespace>
+
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize Condition="'$(Configuration)' != 'Debug'">true</Optimize>
   </PropertyGroup>
 
 
@@ -43,20 +47,20 @@
 
   <ItemGroup Label="Package references">
     <!-- Vsix project tools -->
-    <PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk" Version="15.8.243" />
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="15.9.3039" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk" Version="16.2.133-pre" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="16.4.1059" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
-    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="15.9.3" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="16.0.204" />
 
     <!-- Regular packages -->
     <!-- https://github.com/NuGet/Home/issues/5899 -->
-    <PackageReference Include="Microsoft.Build" Version="15.9.20" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.10.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="2.10.0" />
+    <PackageReference Include="Microsoft.Build" Version="16.4.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.4.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="3.4.0" />
 
     <!-- Analyzers -->
-    <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="15.8.36" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="15.8.209" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="16.3.14" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.5.132" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
   </ItemGroup>
 

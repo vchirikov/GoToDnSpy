@@ -27,7 +27,7 @@
     <DebugType>embedded</DebugType>
     <LangVersion>latest</LangVersion>
     <Product>GoToDnSpy</Product>
-    <Description>GoToDnSpy vsix extension provide fast access to dnSpy decompiler</Description>
+    <Description>GoToDnSpy vsix extension provide fast access to dnSpy decompiler or source.dot.net</Description>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <NoLogo>true</NoLogo>

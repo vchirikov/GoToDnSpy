@@ -121,7 +121,7 @@
     <value>GoToDnSpy</value>
   </data>
   <data name="112" xml:space="preserve">
-    <value>Open dnSpy and select method or type under caret.</value>
+    <value>Open dnSpy or source.dot.net and select method or type under caret.</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">

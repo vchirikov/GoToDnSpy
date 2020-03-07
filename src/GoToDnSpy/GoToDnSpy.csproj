@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <!-- Set these early for VSSDK to work -->
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
@@ -9,10 +9,10 @@
     <OutputPath>$(SolutionDir)artifacts\bin\</OutputPath>
     <IntermediateOutputPath>$(SolutionDir)artifacts\obj\GoToDnSpy\</IntermediateOutputPath>
     <RootNamespace>GoToDnSpy</RootNamespace>
-
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Optimize Condition="'$(Configuration)' != 'Debug'">true</Optimize>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
   </PropertyGroup>
 
 

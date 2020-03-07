@@ -1,3 +1,10 @@
+<a name="1.1.2"></a>
+## 1.1.2 (2020-03-07)
+
+### Features
+
+* Add netstandard.library and microsoft.netcore.app.ref redirect to [source.dot.net](https://source.dot.net) ([855a684f](https://github.com/vchirikov/GoToDnSpy/commit/855a684f))
+
 <a name="1.1.0"></a>
 ## 1.1.0 (2020-03-07)
 

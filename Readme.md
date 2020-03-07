@@ -9,7 +9,7 @@ You can [download latest dnSpy build](https://ci.appveyor.com/project/0xd4d/dnsp
 
 ## Installing
 
-Plugin can be found in [Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=VladimirChirikov.GoToDnSpy).
+The plugin can be found in [Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=VladimirChirikov.GoToDnSpy).
 
 **Please send positive feedback if you like the extension :)**
 

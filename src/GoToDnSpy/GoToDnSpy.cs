@@ -249,8 +249,11 @@ namespace GoToDnSpy
                     MessageBox.Show($"Try build project first;\nAssembly '{asmDef}' with type {typeName} not found, path:\n{asmPath}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-                // for netstandard path will be c:\work\dotnet\sdk-latest-bin\packs\NETStandard.Library.Ref\2.1.0\ref\netstandard2.1\
-                if (asmPath.IndexOf("NETStandard.Library.Ref", StringComparison.Ordinal) > 0)
+                // for netstandard path will be c:\▮▮▮▮\dotnet\sdk\packs\NETStandard.Library.Ref\2.1.0\ref\netstandard2.1\
+                // also can be with netstandard.library (via nupkg)
+                if (asmPath.IndexOf("NETStandard.Library.Ref", StringComparison.Ordinal) > 0
+                    || asmPath.IndexOf("netstandard.library", StringComparison.Ordinal) > 0
+                    || asmPath.IndexOf("microsoft.netcore.app.ref", StringComparison.Ordinal) > 0)
                 {
 
                     const string baseUrl = "https://source.dot.net";

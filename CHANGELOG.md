@@ -1,3 +1,10 @@
+<a name="1.1.3"></a>
+## 1.1.3 (2020-##-##)
+
+### Features
+
+* Add System.Buffers source support
+
 <a name="1.1.2"></a>
 ## 1.1.2 (2020-03-07)
 

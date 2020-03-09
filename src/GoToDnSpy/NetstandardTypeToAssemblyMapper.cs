@@ -14,7 +14,6 @@ namespace GoToDnSpy
             "System.Diagnostics",
             "System.Reflection",
             "System.Text",
-            "System.Buffers",
             "System.Threading",
             "System.Net",
             "System.Numerics",
@@ -25,6 +24,7 @@ namespace GoToDnSpy
             "System.IO",
             "System.Globalization",
             "System.Collections.Generic",
+            "System.Buffers.Text",
         };
 
         private readonly static string[] _coreLibTypes = new string[] {
@@ -35,11 +35,17 @@ namespace GoToDnSpy
 
         internal string Get(string typeNamespace, string typeName)
         {
-            if (_coreLibStartWithNamespaces.Any(x => x.StartsWith(typeNamespace))
-                || _coreLibStandAloneNamespaces.Contains(typeNamespace)
-                || _coreLibTypes.Any(x => x.StartsWith(typeName)))
+            if (_coreLibStartWithNamespaces.Any(x => x.StartsWith(typeNamespace, StringComparison.Ordinal))
+                || _coreLibStandAloneNamespaces.Contains(typeNamespace, StringComparer.Ordinal)
+                || _coreLibTypes.Any(x => x.StartsWith(typeName, StringComparison.Ordinal)))
             {
                 return "System.Private.CoreLib";
+            }
+
+
+            if(typeNamespace.StartsWith("System.Buffers", StringComparison.Ordinal))
+            {
+                return "System.Memory";
             }
 
             var result = CheckNamespace(typeNamespace);

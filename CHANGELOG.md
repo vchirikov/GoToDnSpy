@@ -3,7 +3,7 @@
 
 ### Features
 
-* Add System.Buffers source support
+* Add System.Buffers source support ([2a1f09ef](https://github.com/vchirikov/GoToDnSpy/commit/2a1f09ef))
 
 <a name="1.1.2"></a>
 ## 1.1.2 (2020-03-07)

@@ -1,0 +1,25 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <RepoRoot>$([MSBuild]::EnsureTrailingSlash('$(MSBuildThisFileDirectory)'))</RepoRoot>
+    <SolutionDir Condition="$(SolutionDir) == ''">$(RepoRoot)</SolutionDir>
+    <NoLogo>true</NoLogo>
+    <Authors>Vladimir Chirikov</Authors>
+    <Description>Platform package</Description>
+    <ApplicationIcon>$(MSBuildThisFileDirectory)\docs\img\icon.ico</ApplicationIcon>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <OutputPath>$(RepoRoot)artifacts\</OutputPath>
+    <PackageOutputPath>$(RepoRoot)artifacts\nupkg</PackageOutputPath>
+    <Features>strict;pdb-path-determinism</Features>
+    <!-- NU5105: The package version uses SemVer 2.0.0 or components of SemVer 1.0.0 that are not supported on legacy clients -->
+    <!-- NU5048: The 'PackageIconUrl'/'iconUrl' element is deprecated -->
+    <NoWarn>$(NoWarn);NU5105;NU5048;</NoWarn>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <GenerateFullPaths Condition="'$(TERM_PROGRAM)' == 'vscode'">true</GenerateFullPaths>
+  </PropertyGroup>
+</Project>

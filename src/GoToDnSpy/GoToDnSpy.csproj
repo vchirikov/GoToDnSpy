@@ -1,18 +1,9 @@
-﻿<Project>
+<Project>
   <!-- Set these early for VSSDK -->
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
-    <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory.TrimEnd('\').TrimEnd('/'))\..\..\</SolutionDir>
-    <BaseOutputPath>..\..\artifacts\bin</BaseOutputPath>
-    <BaseIntermediateOutputPath>$(SolutionDir)artifacts\obj\GoToDnSpy\</BaseIntermediateOutputPath>
-    <OutputPath>$(SolutionDir)artifacts\bin\</OutputPath>
-    <IntermediateOutputPath>$(SolutionDir)artifacts\obj\GoToDnSpy\</IntermediateOutputPath>
     <RootNamespace>GoToDnSpy</RootNamespace>
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize Condition="'$(Configuration)' != 'Debug'">true</Optimize>
-    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
   </PropertyGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
@@ -30,12 +21,11 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <NoLogo>true</NoLogo>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)src\key.snk</AssemblyOriginatorKeyFile>
-    <ApplicationIcon>$(SolutionDir)docs\img\icon.ico</ApplicationIcon>
+    <AssemblyOriginatorKeyFile>$(RepoRoot)src\key.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
 
     <!-- Vsix special -->
-    <TargetVsixContainer>$(SolutionDir)artifacts\vsix\GoToDnSpy.vsix</TargetVsixContainer>
+    <TargetVsixContainer>$(RepoRoot)artifacts\vsix\GoToDnSpy.vsix</TargetVsixContainer>
     <ZipPackageCompressionLevel>Normal</ZipPackageCompressionLevel>
     <!-- for pkgdef-->
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
@@ -45,9 +35,9 @@
   <ItemGroup Label="Package references">
     <!-- Vsix project tools -->
     <PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk" Version="16.2.133-pre" />
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="16.4.1059" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="16.7.3069" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
-    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="16.0.204" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="16.0.206" />
 
     <!-- Regular packages -->
     <!-- https://github.com/NuGet/Home/issues/5899 -->
@@ -56,28 +46,16 @@
     <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="3.4.0" />
 
     <!-- Analyzers -->
-    <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="16.3.14" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.5.132" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="16.7.9" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.7.56" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
   </ItemGroup>
 
   <ItemGroup Label="VSIX includes">
-    <Content Include="$(SolutionDir)docs\img\icon.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="$(SolutionDir)docs\img\preview.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="$(SolutionDir)LICENSE">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="$(SolutionDir)CHANGELOG.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
+    <Content Include="$(RepoRoot)docs\img\icon.ico" CopyToOutputDirectory="PreserveNewest" IncludeInVSIX="true" />
+    <Content Include="$(RepoRoot)docs\img\preview.png" CopyToOutputDirectory="PreserveNewest" IncludeInVSIX="true" />
+    <Content Include="$(RepoRoot)LICENSE" CopyToOutputDirectory="PreserveNewest" IncludeInVSIX="true" />
+    <Content Include="$(RepoRoot)CHANGELOG.md" CopyToOutputDirectory="PreserveNewest" IncludeInVSIX="true" />
   </ItemGroup>
 
   <ItemGroup Label="PkgDef and VSCT">

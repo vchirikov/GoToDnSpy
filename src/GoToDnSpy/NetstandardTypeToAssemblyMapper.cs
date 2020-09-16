@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -43,7 +42,7 @@ namespace GoToDnSpy
             }
 
 
-            if(typeNamespace.StartsWith("System.Buffers", StringComparison.Ordinal))
+            if (typeNamespace.StartsWith("System.Buffers", StringComparison.Ordinal))
             {
                 return "System.Memory";
             }
@@ -64,7 +63,7 @@ namespace GoToDnSpy
                 if (result != null)
                     return result;
             }
-            // good luck when
+
             return typeNamespace.StartsWith("System", StringComparison.Ordinal) ? "System.Private.CoreLib" : null;
 
             static string CheckNamespace(string ns)

@@ -1,3 +1,10 @@
+<a name="1.1.4"></a>
+## 1.1.4 (2020-09-16)
+
+### Bug Fixes
+
+* Remove vs 2017 support ([2a1f09ef](https://github.com/vchirikov/GoToDnSpy/commit/b66bc8ea8fb5b60cad5a89548bb3acd831728a51))
+
 <a name="1.1.3"></a>
 ## 1.1.3 (2020-##-##)
 

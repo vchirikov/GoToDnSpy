@@ -155,6 +155,7 @@ namespace GoToDnSpy
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 _statusBar.SetText("");
                 var dnSpyPath = ReadDnSpyPath()?.Trim(_pathTrimChars);
+                var loadPrevious = ReadLoadPrevious();
                 if (string.IsNullOrWhiteSpace(dnSpyPath))
                 {
                     MessageBox.Show("You must specify dnSpy path in options", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -269,7 +270,7 @@ namespace GoToDnSpy
                         return;
                     }
                 }
-                System.Diagnostics.Process.Start(dnSpyPath, BuildDnSpyArguments(asmPath, typeName, memberName, memberType));
+                System.Diagnostics.Process.Start(dnSpyPath, BuildDnSpyArguments(asmPath, typeName, memberName, memberType, loadPrevious));
 
             }
             catch (Exception ex)
@@ -380,9 +381,11 @@ namespace GoToDnSpy
 
         private string ReadDnSpyPath() => ((SettingsDialog)_package.GetDialogPage(typeof(SettingsDialog)))?.DnSpyPath;
 
-        private static string BuildDnSpyArguments(string asmPath, string typeName, string memberName, MemberType memberType)
+        private bool ReadLoadPrevious() => ((SettingsDialog)_package.GetDialogPage(typeof(SettingsDialog))).LoadPrevious;
+
+        private static string BuildDnSpyArguments(string asmPath, string typeName, string memberName, MemberType memberType, bool loadPrevious)
         {
-            string result = $"\"{asmPath}\" --dont-load-files --select {(memberName == null ? 'T' : memberType.ToString()[0])}:{typeName}";
+            string result = $"\"{asmPath}\" {(loadPrevious ? "" : "--dont-load-files")} --new-tab --select {(memberName == null ? 'T' : memberType.ToString()[0])}:{typeName}";
             if (memberName != null)
                 result = $"{result}.{memberName}";
             return result;

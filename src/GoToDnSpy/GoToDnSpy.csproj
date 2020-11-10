@@ -47,7 +47,7 @@
 
     <!-- Analyzers -->
     <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="16.7.9" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.7.56" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.8.55" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
   </ItemGroup>
 

@@ -11,7 +11,7 @@ namespace GoToDnSpy
         public static T FindByNameOrDefault<T>(this Properties properties, string name)
         {
             if (properties == null || string.IsNullOrEmpty(name))
-                return default;
+                return default!;
 
             ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -22,10 +22,10 @@ namespace GoToDnSpy
 
                 return (T) property.Value;
             }
-            return default;
+            return default!;
         }
 
-        public static ProjectItem FindByNameOrDefault(this ProjectItems collection, string name, bool recursive = false)
+        public static ProjectItem? FindByNameOrDefault(this ProjectItems collection, string name, bool recursive = false)
         {
             if (collection == null)
                 return null;
@@ -49,11 +49,11 @@ namespace GoToDnSpy
             return null;
         }
 
-        public static EnvDTE.ProjectItem FindProjectItemByNameOrDefault(this Project project, string name, bool recursive) // directory tree recursive find of files
+        public static ProjectItem? FindProjectItemByNameOrDefault(this Project project, string name, bool recursive) // directory tree recursive find of files
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             // if it's real project we can use find
-            if (project.Kind != EnvDTE.Constants.vsProjectKindSolutionItems)
+            if (project.Kind != Constants.vsProjectKindSolutionItems)
             {
                 if (project.ProjectItems?.Count > 0)
                     return project.ProjectItems.FindByNameOrDefault(name, recursive);
@@ -76,11 +76,17 @@ namespace GoToDnSpy
         /// <summary>
         /// Workaround from https://github.com/dotnet/project-system/issues/669
         /// </summary>
-        private static string GetProjectPropertyNetCoreWorkaround(this Project project, string name)
+        private static string? GetProjectPropertyNetCoreWorkaround(this Project project, string name)
         {
             var unconfiguredProject = project.AsUnconfiguredProject();
+            if (unconfiguredProject == null)
+                return null;
             var configuredProject = unconfiguredProject.GetSuggestedConfiguredProjectAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-            var properties = configuredProject.Services.ProjectPropertiesProvider.GetCommonProperties();
+            if (configuredProject == null)
+                return null;
+            var properties = configuredProject.Services.ProjectPropertiesProvider?.GetCommonProperties();
+            if (properties == null)
+                return null;
             return properties.GetEvaluatedPropertyValueAsync(name).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
@@ -90,7 +96,7 @@ namespace GoToDnSpy
         /// <param name="project">EnvDTE proj</param>
         /// <param name="name">The property name.</param>
         /// <returns>string or null</returns>
-        public static string GetPropertyOrDefault(this Project project, string name)
+        public static string? GetPropertyOrDefault(this Project project, string name)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             return (project.Properties.FindByNameOrDefault<string>(name)
@@ -106,7 +112,7 @@ namespace GoToDnSpy
         /// </summary>
         /// <param name="project">The project.</param>
         /// <returns>output filepath</returns>
-        public static string GetOutputFilename(this Project project)
+        public static string? GetOutputFilename(this Project project)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             return (project.Properties.FindByNameOrDefault<string>("OutputFileName") ?? project.GetProjectPropertyNetCoreWorkaround("TargetFileName"))?.Trim();

@@ -1,6 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Windows.Forms;
+using EnvDTE;
+using Microsoft;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
@@ -8,22 +20,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reflection;
-using System.IO;
-using EnvDTE;
-using System.Windows.Forms;
-using Microsoft.Build.Evaluation;
-using Microsoft.VisualStudio.ProjectSystem.Properties;
-using Microsoft;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Threading;
-using System.Security.Cryptography;
 
 namespace GoToDnSpy
 {
@@ -45,12 +42,7 @@ namespace GoToDnSpy
         /// <summary>
         /// Gets the instance of the command.
         /// </summary>
-        public static GoToDnSpy Instance { get; private set; }
-
-        /// <summary>
-        /// Netcore/netstandard libs can returns us reference assembly netstandard.dll, we don't know how to map it. wi'll try to find right assembly
-        /// </summary>
-        public readonly static NamespaceToAssemblyMapper NetstandardMapper = new NamespaceToAssemblyMapper();
+        public static GoToDnSpy Instance { get; private set; } = default!;
 
         /// <summary>
         /// Gets the service provider from the owner package.
@@ -128,15 +120,17 @@ namespace GoToDnSpy
             ThreadHelper.ThrowIfNotOnUIThread();
 
             // Get the output window
-            var outputWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            if (Package.GetGlobalService(typeof(SVsOutputWindow)) is IVsOutputWindow outputWindow)
+            {
 
-            // Ensure that the desired pane is visible
-            var paneGuid = VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
-            outputWindow.CreatePane(paneGuid, "General", 1, 0);
-            outputWindow.GetPane(paneGuid, out IVsOutputWindowPane pane);
+                // Ensure that the desired pane is visible
+                var paneGuid = VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
+                outputWindow.CreatePane(paneGuid, "General", 1, 0);
+                outputWindow.GetPane(paneGuid, out IVsOutputWindowPane pane);
 
-            // Output the message
-            pane.OutputString(msg);
+                // Output the message
+                pane?.OutputStringThreadSafe(msg);
+            }
         }
 
         /// <summary>
@@ -175,18 +169,33 @@ namespace GoToDnSpy
                     return;
                 }
                 SnapshotPoint caretPosition = textView.Caret.Position.BufferPosition;
-                Microsoft.CodeAnalysis.Document document = caretPosition.Snapshot.GetOpenDocumentInCurrentContextWithChanges();
+                Microsoft.CodeAnalysis.Document? document = caretPosition.Snapshot.GetOpenDocumentInCurrentContextWithChanges();
                 if (document == null)
                 {
                     _statusBar.SetText("You should execute the command while a document window is active.");
                     return;
                 }
 
-                SyntaxNode rootSyntaxNode = await document.GetSyntaxRootAsync().ConfigureAwait(true);
+                SyntaxNode? rootSyntaxNode = await document.GetSyntaxRootAsync().ConfigureAwait(true);
+                if (rootSyntaxNode == null)
+                {
+                    _statusBar.SetText("Can't get a syntax root node");
+                    return;
+                }
                 SyntaxToken st = rootSyntaxNode.FindToken(caretPosition);
-                SemanticModel semanticModel = await document.GetSemanticModelAsync().ConfigureAwait(true);
+                SemanticModel? semanticModel = await document.GetSemanticModelAsync().ConfigureAwait(true);
 
-                ISymbol symbol = null;
+                if (semanticModel == null)
+                {
+                    _statusBar.SetText("Can't get a semantic model");
+                    return;
+                }
+                if (st.Parent == null)
+                {
+                    _statusBar.SetText("Can't get parent node");
+                    return;
+                }
+                ISymbol? symbol = null;
                 var parentKind = st.Parent.Kind();
                 if (st.Kind() == SyntaxKind.IdentifierToken && (
                        parentKind == SyntaxKind.PropertyDeclaration
@@ -216,16 +225,19 @@ namespace GoToDnSpy
                     SymbolInfo si = semanticModel.GetSymbolInfo(st.Parent);
                     symbol = si.Symbol ?? si.CandidateSymbols.FirstOrDefault();
                 }
-
+                if (symbol == null)
+                {
+                    _statusBar.SetText($"Can't find symbol");
+                    return;
+                }
                 TryPreprocessLocal(ref symbol);
 
-                string memberName = null;
-
+                string? memberName = null;
                 MemberType memberType = 0;
 
                 // todo: view SLaks.Ref12.Services.RoslynSymbolResolver
                 if (symbol == null || (
-                        (!TryHandleAsType(symbol, out INamedTypeSymbol typeSymbol))
+                        (!TryHandleAsType(symbol, out INamedTypeSymbol? typeSymbol))
                      && (!TryHandleAsMember(symbol, out typeSymbol, out memberName, out memberType))
                 ))
                 {
@@ -235,32 +247,36 @@ namespace GoToDnSpy
                     return;
                 }
 
+                if (typeSymbol == null)
+                    return;
+
                 string typeNamespace = GetFullNamespace(typeSymbol);
                 string typeName = typeNamespace + "." + typeSymbol.MetadataName;
                 string asmDef = GetAssemblyDefinition(typeSymbol.ContainingAssembly);
-                string asmPath = GetAssemblyPath(semanticModel, asmDef);
+                string? asmPath = GetAssemblyPath(semanticModel, asmDef);
 
                 if (string.IsNullOrWhiteSpace(asmPath))
                 {
-                    _statusBar.SetText($"Assembly '{asmDef}' with type {typeName} not found;");
+                    _statusBar.SetText($"Assembly '{asmDef}' with type {typeName} was not found;");
                     return;
                 }
                 else if (!File.Exists(asmPath))
                 {
-                    MessageBox.Show($"Try build project first;\nAssembly '{asmDef}' with type {typeName} not found, path:\n{asmPath}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Try build project first;\nAssembly '{asmDef}' with type {typeName} was not found, path:\n{asmPath}", "[GoToDnSpy] Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 // for netstandard path will be c:\▮▮▮▮\dotnet\sdk\packs\NETStandard.Library.Ref\2.1.0\ref\netstandard2.1\
                 // also can be with netstandard.library (via nupkg)
-                if (asmPath.IndexOf("NETStandard.Library.Ref", StringComparison.Ordinal) > 0
-                    || asmPath.IndexOf("netstandard.library", StringComparison.Ordinal) > 0
-                    || asmPath.IndexOf("microsoft.netcore.app.ref", StringComparison.Ordinal) > 0)
+                if (asmPath != null && (asmPath.IndexOf("NETStandard.Library.Ref", StringComparison.OrdinalIgnoreCase) > 0
+                    || asmPath.IndexOf("netstandard.library", StringComparison.OrdinalIgnoreCase) > 0
+                    || asmPath.IndexOf("microsoft.netcore.app.ref", StringComparison.OrdinalIgnoreCase) > 0
+                    || asmPath.IndexOf("Microsoft.AspNetCore.App.Ref", StringComparison.OrdinalIgnoreCase) > 0))
                 {
 
                     const string baseUrl = "https://source.dot.net";
                     var docId = GetDocumentationCommentId(memberName is null ? typeSymbol : symbol);
-                    var assemblyName = NetstandardMapper.Get(typeNamespace, typeName);
-                    if (assemblyName != null)
+                    var assemblyName = NamespaceToAssemblyMapper.Get(typeNamespace, typeName);
+                    if (assemblyName != null && docId != null)
                     {
                         var url = baseUrl + "/" + assemblyName + "/a.html#" + GetMD5Hash(docId, 16);
                         System.Diagnostics.Process.Start(new ProcessStartInfo() {
@@ -270,7 +286,15 @@ namespace GoToDnSpy
                         return;
                     }
                 }
-                System.Diagnostics.Process.Start(dnSpyPath, BuildDnSpyArguments(asmPath, typeName, memberName, memberType, loadPrevious));
+                if (memberName != null && asmPath != null)
+                {
+                    System.Diagnostics.Process.Start(dnSpyPath, BuildDnSpyArguments(asmPath, typeName, memberName, memberType, loadPrevious));
+                }
+                else
+                {
+                    _statusBar.SetText("Member name wasn't found");
+                    return;
+                }
 
             }
             catch (Exception ex)
@@ -280,14 +304,14 @@ namespace GoToDnSpy
             }
         }
 
-        private static string GetDocumentationCommentId(ISymbol symbol)
+        private static string? GetDocumentationCommentId(ISymbol symbol)
         {
             if (!symbol.IsDefinition)
             {
                 symbol = symbol.OriginalDefinition;
             }
 
-            string result = symbol.GetDocumentationCommentId();
+            var result = symbol.GetDocumentationCommentId();
 
             if (result == null)     // goto labels have no doc comment ID
                 return null;
@@ -326,7 +350,7 @@ namespace GoToDnSpy
 
 
 
-        private string GetCurrentFileOutputAssembly()
+        private string? GetCurrentFileOutputAssembly()
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             var project = _dte.ActiveDocument?.ProjectItem?.ContainingProject;
@@ -335,7 +359,7 @@ namespace GoToDnSpy
             if (project != null && (
                         string.CompareOrdinal(project.UniqueName, EnvDTE.Constants.vsMiscFilesProjectUniqueName) == 0
                      || string.CompareOrdinal(project.UniqueName, EnvDTE.Constants.vsSolutionItemsProjectUniqueName) == 0
-                ))
+                ) && _dte.ActiveDocument != null)
             {
                 project = _dte.Solution.FindProjectItem(_dte.ActiveDocument.FullName)?.ContainingProject;
             }
@@ -346,11 +370,11 @@ namespace GoToDnSpy
             return GetTargetOutputPath(project);
         }
 
-        private string GetTargetOutputPath(EnvDTE.Project project)
+        private string? GetTargetOutputPath(EnvDTE.Project project)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            string outputPath = project.GetPropertyOrDefault("OutputPath");
+            string? outputPath = project.GetPropertyOrDefault("OutputPath");
 
             if (string.IsNullOrWhiteSpace(outputPath))
             {
@@ -366,7 +390,7 @@ namespace GoToDnSpy
             }
 
             // check outputPath type (shares and C:\ is absolute path and we can just return)
-            if (outputPath.StartsWith("\\\\", StringComparison.Ordinal)
+            if (outputPath!.StartsWith("\\\\", StringComparison.Ordinal)
                 || (outputPath.Length >= 2 && outputPath[1] == Path.VolumeSeparatorChar))
             {
                 directory = outputPath;
@@ -379,7 +403,7 @@ namespace GoToDnSpy
             return Path.Combine(directory, project.GetOutputFilename() ?? Path.ChangeExtension(outputFilename, ".dll"));
         }
 
-        private string ReadDnSpyPath() => ((SettingsDialog)_package.GetDialogPage(typeof(SettingsDialog)))?.DnSpyPath;
+        private string? ReadDnSpyPath() => ((SettingsDialog)_package.GetDialogPage(typeof(SettingsDialog)))?.DnSpyPath;
 
         private bool ReadLoadPrevious() => ((SettingsDialog)_package.GetDialogPage(typeof(SettingsDialog))).LoadPrevious;
 
@@ -391,7 +415,7 @@ namespace GoToDnSpy
             return result;
         }
 
-        private string GetAssemblyPath(SemanticModel semanticModel, string assemblyDef)
+        private string? GetAssemblyPath(SemanticModel semanticModel, string assemblyDef)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             IEnumerator<AssemblyIdentity> refAsmNames = semanticModel.Compilation.ReferencedAssemblyNames.GetEnumerator();
@@ -405,7 +429,9 @@ namespace GoToDnSpy
                     continue;
 
                 var displayName = refs.Current.Display;
-                EnvDTE.Project project = null;
+                if (displayName == null)
+                    return null;
+                EnvDTE.Project? project = null;
 
                 // try found project
                 foreach (EnvDTE.Project proj in _dte.Solution.Projects)
@@ -450,13 +476,13 @@ namespace GoToDnSpy
             return false;
         }
 
-        private static bool TryHandleAsType(ISymbol symbol, out INamedTypeSymbol type)
+        private static bool TryHandleAsType(ISymbol symbol, out INamedTypeSymbol? type)
         {
             type = symbol as INamedTypeSymbol;
             return type != null;
         }
 
-        private static bool TryHandleAsMember(ISymbol symbol, out INamedTypeSymbol type, out string memberName, out MemberType memberType)
+        private static bool TryHandleAsMember(ISymbol symbol, out INamedTypeSymbol? type, out string? memberName, out MemberType memberType)
         {
             if (symbol is IFieldSymbol fieldSymbol)
             {
@@ -511,7 +537,7 @@ namespace GoToDnSpy
             return sb.ToString();
         }
 
-        private IWpfTextView GetTextView()
+        private IWpfTextView? GetTextView()
         {
             var textManager = (IVsTextManager)ServiceProvider.GetService(typeof(VsTextManagerClass));
             Assumes.Present(textManager);

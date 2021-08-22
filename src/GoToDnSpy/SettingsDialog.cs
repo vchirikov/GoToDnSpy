@@ -16,7 +16,7 @@ namespace GoToDnSpy
         [Category("GoTo dnSpy")]
         [DisplayName("dnSpy path")]
         [Description("Path to dnSpy.exe. Example: C:\\dnSpy\\dnSpy.exe")]
-        public string DnSpyPath { get; set;}
+        public string DnSpyPath { get; set; } = "";
 
         [Category("GoTo dnSpy")]
         [DisplayName("Load previous list")]

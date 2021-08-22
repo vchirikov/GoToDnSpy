@@ -38,7 +38,7 @@ namespace GoToDnSpy
 
                 foreach (var assemblyFile in Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories))
                 {
-                    AssemblyName assemblyName = null;
+                    AssemblyName? assemblyName = null;
                     try
                     {
                         assemblyName = AssemblyName.GetAssemblyName(assemblyFile);
@@ -57,9 +57,9 @@ namespace GoToDnSpy
         /// Search assemblyName in GAC folders.
         /// First search in net framework 4, when search in gac net framework 2
         /// </summary>
-        /// <param name="assemblyName">Assembly name for search</param>
+        /// <param name="assemblyFullName">Assembly name for search</param>
         /// <returns>path to assembly or <c>null</c></returns>
-        public static string FindAssemblyInGac(string assemblyFullName)
+        public static string? FindAssemblyInGac(string assemblyFullName)
         {
             if (_gacNetframework4.Value.TryGetValue(assemblyFullName, out var result))
                 return result;

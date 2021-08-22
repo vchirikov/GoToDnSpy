@@ -25,7 +25,7 @@
     <SignAssembly>true</SignAssembly>
 
     <!-- Vsix special -->
-    <TargetVsixContainer>$(RepoRoot)artifacts\vsix\GoToDnSpy.vsix</TargetVsixContainer>
+    <TargetVsixContainer>$(RepoRoot)artifacts\vsix\GoToDnSpy2022.vsix</TargetVsixContainer>
     <ZipPackageCompressionLevel>Normal</ZipPackageCompressionLevel>
     <!-- for pkgdef-->
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
@@ -34,20 +34,32 @@
 
   <ItemGroup Label="Package references">
     <!-- Vsix project tools -->
-    <PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk" Version="16.2.133-pre" />
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="16.7.3069" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk" Version="17.0.667-pre" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.3177-preview3" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
-    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="16.0.206" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.0-previews-3-31605-261" />
 
     <!-- Regular packages -->
     <!-- https://github.com/NuGet/Home/issues/5899 -->
-    <PackageReference Include="Microsoft.Build" Version="16.4.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.4.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="3.4.0" />
+    <PackageReference Include="Microsoft.Build" Version="16.11.0" />
+    <!-- Microsoft.VisualStudio.ProjectSystem.Sdk dependencies has incorrect version range, that's why we use explicit version here, remove this later-->
+    <!-- <Microsoft.VisualStudio.ProjectSystem.Sdk dependencies> -->
+    <PackageReference Include="Microsoft.Build.Framework" Version="16.11.0" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="16.11.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.21-alpha" />
+    <!-- </Microsoft.VisualStudio.ProjectSystem.Sdk dependencies> -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.0-3.final" />
+    <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="4.0.0-3.final" />
+    <!-- Microsoft.CodeAnalysis.EditorFeatures.Text has incorrect version range, that's why we use explicit version here, remove this later-->
+    <!-- <Microsoft.CodeAnalysis.EditorFeatures.Text> -->
+    <PackageReference Include="Microsoft.VisualStudio.CoreUtility" Version="17.0.255-preview-ga4c683bf62" />
+    <PackageReference Include="Microsoft.VisualStudio.Text.Data" Version="17.0.255-preview-ga4c683bf62" />
+    <PackageReference Include="Microsoft.VisualStudio.Text.Logic" Version="17.0.255-preview-ga4c683bf62" />
+    <!-- </Microsoft.CodeAnalysis.EditorFeatures.Text> -->
 
     <!-- Analyzers -->
-    <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="16.7.9" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.8.55" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="16.10.10" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.32-alpha" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
   </ItemGroup>
 

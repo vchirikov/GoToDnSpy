@@ -1,9 +1,29 @@
+
+<a name="2.0.0"></a>
+## 2.0.0 (2020-11-10)
+
+### Features
+
+* VS 2022 support ([5604590](https://github.com/vchirikov/GoToDnSpy/commit/56045905b9cc94c7eb71cfa6813b3ea90cfdd6d2)), fixes [#13](https://github.com/vchirikov/GoToDnSpy/issues/13)  
+* Support of VS2019 is dropped, because [PIA layer was changed a lot](https://developercommunity.visualstudio.com/t/dte-events-not-working-in-vs2022/1455126)  
+
+### Bug Fixes
+
+* Better search through the latest aspnetcore/runtime sources
+
+<a name="1.1.5"></a>
+## 1.1.5 (2020-11-10)
+
+### Features
+
+* Open selection in new tab and make "--dont-load-files" optional ([ea467795](https://github.com/vchirikov/GoToDnSpy/pull/12/commits/ea46779554f36c5020f4bb9e0371979d9e350ee3))
+
 <a name="1.1.4"></a>
 ## 1.1.4 (2020-09-16)
 
 ### Bug Fixes
 
-* Remove vs 2017 support ([2a1f09ef](https://github.com/vchirikov/GoToDnSpy/commit/b66bc8ea8fb5b60cad5a89548bb3acd831728a51))
+* Remove vs 2017 support ([b66bc8ea](https://github.com/vchirikov/GoToDnSpy/commit/b66bc8ea8fb5b60cad5a89548bb3acd831728a51))
 
 <a name="1.1.3"></a>
 ## 1.1.3 (2020-##-##)

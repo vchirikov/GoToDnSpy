@@ -1,4 +1,12 @@
 
+<a name="2.0.1"></a>
+## 2.0.1 (2020-11-10)
+
+### Bug Fixes
+
+* Fix for the "member name wasn't found" problem. ([dbde45e](https://github.com/vchirikov/GoToDnSpy/commit/dbde45e)), fixes [#14](https://github.com/vchirikov/GoToDnSpy/issues/14)  
+
+
 <a name="2.0.0"></a>
 ## 2.0.0 (2020-11-10)
 

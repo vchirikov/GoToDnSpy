@@ -286,15 +286,12 @@ namespace GoToDnSpy
                         return;
                     }
                 }
-                if (memberName != null && asmPath != null)
+                if (asmPath == null)
                 {
-                    System.Diagnostics.Process.Start(dnSpyPath, BuildDnSpyArguments(asmPath, typeName, memberName, memberType, loadPrevious));
-                }
-                else
-                {
-                    _statusBar.SetText("Member name wasn't found");
+                    _statusBar.SetText($"The assembly for the type '{typeName ?? "(null)"}' wasn't found");
                     return;
                 }
+                System.Diagnostics.Process.Start(dnSpyPath, BuildDnSpyArguments(asmPath, typeName, memberName, memberType, loadPrevious));
 
             }
             catch (Exception ex)
@@ -407,7 +404,7 @@ namespace GoToDnSpy
 
         private bool ReadLoadPrevious() => ((SettingsDialog)_package.GetDialogPage(typeof(SettingsDialog))).LoadPrevious;
 
-        private static string BuildDnSpyArguments(string asmPath, string typeName, string memberName, MemberType memberType, bool loadPrevious)
+        private static string BuildDnSpyArguments(string asmPath, string typeName, string? memberName, MemberType memberType, bool loadPrevious)
         {
             string result = $"\"{asmPath}\" {(loadPrevious ? "" : "--dont-load-files")} --new-tab --select {(memberName == null ? 'T' : memberType.ToString()[0])}:{typeName}";
             if (memberName != null)

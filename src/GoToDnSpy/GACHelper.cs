@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace GoToDnSpy
@@ -17,7 +16,7 @@ namespace GoToDnSpy
 
         static GacHelper()
         {
-            _gacFolders = new string[] { "GAC", "GAC_32", "GAC_64", "GAC_MSIL" };
+            _gacFolders = ["GAC", "GAC_32", "GAC_64", "GAC_MSIL"];
             _systemrootPath = Environment.GetEnvironmentVariable("systemroot") ?? throw new GoToDnSpyException($"Enviroment variable 'systemroot' doesn't exists!");
             _referenceAssemblyPath_x64 = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles") ?? @"c:\Program Files\", "Reference Assemblies");
             _referenceAssemblyPath_x86 = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)") ?? @"c:\Program Files (x86)\", "Reference Assemblies");

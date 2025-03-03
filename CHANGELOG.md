@@ -1,3 +1,10 @@
+<a name="2.0.1"></a>
+## 2.0.2 (2025-03-03)
+
+### Build
+
+* Update packages, fixes [#18](https://github.com/vchirikov/GoToDnSpy/issues/14)  
+
 
 <a name="2.0.1"></a>
 ## 2.0.1 (2020-11-10)

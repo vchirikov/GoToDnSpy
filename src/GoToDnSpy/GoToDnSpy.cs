@@ -64,7 +64,7 @@ namespace GoToDnSpy
         /// </summary>
         private readonly DTE _dte;
 
-        private readonly static char[] _pathTrimChars = new[] { '\r', '\n', ' ', '\'', '\"' };
+        private readonly static char[] _pathTrimChars = ['\r', '\n', ' ', '\'', '\"'];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GoToDnSpy"/> class.
@@ -197,7 +197,7 @@ namespace GoToDnSpy
                 }
                 ISymbol? symbol = null;
                 var parentKind = st.Parent.Kind();
-                if (st.Kind() == SyntaxKind.IdentifierToken && (
+                if (st.IsKind(SyntaxKind.IdentifierToken) && (
                        parentKind == SyntaxKind.PropertyDeclaration
                     || parentKind == SyntaxKind.FieldDeclaration
                     || parentKind == SyntaxKind.MethodDeclaration

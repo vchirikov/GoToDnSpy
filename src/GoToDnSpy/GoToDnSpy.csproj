@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
   <!-- Set these early for VSSDK -->
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
@@ -32,34 +32,27 @@
     <RegisterWithCodebase>true</RegisterWithCodebase>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Design" />
+  </ItemGroup>
+
   <ItemGroup Label="Package references">
     <!-- Vsix project tools -->
-    <PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk" Version="17.0.667-pre" />
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.3177-preview3" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk" Version="17.9.380" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.13.2126" NoWarn="NU1604" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
-    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.0-previews-3-31605-261" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.32112.339" ExcludeAssets="runtime" NoWarn="NU1604" />
 
     <!-- Regular packages -->
     <!-- https://github.com/NuGet/Home/issues/5899 -->
-    <PackageReference Include="Microsoft.Build" Version="16.11.0" />
-    <!-- Microsoft.VisualStudio.ProjectSystem.Sdk dependencies has incorrect version range, that's why we use explicit version here, remove this later-->
-    <!-- <Microsoft.VisualStudio.ProjectSystem.Sdk dependencies> -->
-    <PackageReference Include="Microsoft.Build.Framework" Version="16.11.0" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="16.11.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.21-alpha" />
-    <!-- </Microsoft.VisualStudio.ProjectSystem.Sdk dependencies> -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.0-3.final" />
-    <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="4.0.0-3.final" />
-    <!-- Microsoft.CodeAnalysis.EditorFeatures.Text has incorrect version range, that's why we use explicit version here, remove this later-->
-    <!-- <Microsoft.CodeAnalysis.EditorFeatures.Text> -->
-    <PackageReference Include="Microsoft.VisualStudio.CoreUtility" Version="17.0.255-preview-ga4c683bf62" />
-    <PackageReference Include="Microsoft.VisualStudio.Text.Data" Version="17.0.255-preview-ga4c683bf62" />
-    <PackageReference Include="Microsoft.VisualStudio.Text.Logic" Version="17.0.255-preview-ga4c683bf62" />
-    <!-- </Microsoft.CodeAnalysis.EditorFeatures.Text> -->
+    <PackageReference Include="Microsoft.Build" Version="17.10.4" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.EditorFeatures.Text" Version="4.11.0" />
 
     <!-- Analyzers -->
-    <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="16.10.10" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.32-alpha" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK.Analyzers" Version="17.7.47" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.13.2" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 
   </ItemGroup>
 
@@ -84,7 +77,7 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <!-- [VSIX Synchronizer](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.VsixSynchronizer) -->
+  <!-- [VSIX Synchronizer](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.VsixSynchronizer64) -->
   <ItemGroup Label="VSIX Synchronizer">
     <Compile Update="GoToDnSpyCommands.cs">
       <DesignTime>True</DesignTime>
@@ -97,7 +90,7 @@
       <DependentUpon>source.extension.vsixmanifest</DependentUpon>
     </Compile>
     <None Update="GoToDnSpyCommands.vsct">
-      <Generator>VsctCodeGenerator</Generator>
+      <Generator>VsctGenerator</Generator>
       <LastGenOutput>GoToDnSpyCommands.cs</LastGenOutput>
     </None>
     <None Update="source.extension.vsixmanifest">
@@ -111,6 +104,6 @@
 
   <!-- https://github.com/microsoft/VSProjectSystem/issues/298 -->
   <Target Name="CreateDirectory for vsix" BeforeTargets="CreateVsixContainer">
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(TargetVsixContainer)))"/>
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(TargetVsixContainer)))" />
   </Target>
 </Project>
